@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "google-spreadsheet": "^3.0.4",
+    "csv-parse": "^4.8.5",
+    "moment": "^2.24.0",
     "node-fetch": "^2.6.0",
     "tempfile": "^3.0.0",
     "xlsx": "^0.15.5"
