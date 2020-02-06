@@ -9,21 +9,88 @@ const XLSX = require('xlsx')
 const csvParse = require('csv-parse/lib/sync')
 const moment = require('moment')
 
-const parseLastUpdate = (lastUpdate, sheetName) => {
-  const normalizedSheetName = sheetName.substr(0, 5)
+const dateFormats = [
+  {
+    template: 'X/X/XX XX:XX',
+    format:   'M/D/YY HH:mm'
+  },
+  {
+    template: 'X/X/XX X:XX',
+    format:   'M/D/YY H:mm'
+  },
+  {
+    template: 'X/XX/XX X:XX',
+    format:   'M/DD/YY H:mm'
+  },
+  {
+    template: 'X/XX/XX XX:XX',
+    format:   'M/DD/YY HH:mm'
+  },
+  {
+    template: 'X/X/XXXX XX:XX',
+    format:   'M/D/YYYY MM:mm'
+  },
+  {
+    template: 'X/X/XXXX X:XX',
+    format:   'M/D/YYYY H:mm'
+  },
+  {
+    template: 'X/XX/XXXX XX:XX',
+    format:   'M/DD/YYYY HH:mm'
+  },
+  {
+    template: 'X/XX/XXXX X:XX',
+    format:   'M/DD/YYYY H:mm'
+  },
+  {
+    template: 'X/X/XXXX XX:XX:XX',
+    format:   'M/D/YYYY HH:mm:ss'
+  },
+  {
+    template: 'X/X/XXXX X:XX:XX',
+    format:   'M/D/YYYY H:mm:ss'
+  },
+  {
+    template: 'X/XX/XXXX XX:XX:XX',
+    format:   'M/DD/YYYY HH:mm:ss'
+  },
+  {
+    template: 'X/XX/XXXX X:XX:XX',
+    format:   'M/DD/YYYY H:mm:ss'
+  },
+  {
+    template: 'X/XX/XXXX XX:XX AM',
+    format:   'M/DD/YYYY hh:mm A'
+  },
+  {
+    template: 'X/XX/XXXX XX:XX PM',
+    format:   'M/DD/YYYY hh:mm A'
+  },
+  {
+    template: 'X/XX/XXXX X:XX PM',
+    format:   'M/DD/YYYY h:mm A'
+  },
+  {
+    template: 'X/XX/XX XX:XX PM',
+    format:   'M/DD/YY hh:mm A'
+  },
+  {
+    template: 'X/XX/XXXX',
+    format:   'M/DD/YYYY'
+  },
+]
+
+const parseLastUpdate = (lastUpdate) => {
+  const lastUpdateTemplate = `${lastUpdate}`.replace(/[0-9]/g, "X")
   try {
-    if (lastUpdate.length === '2/4/20 3:03'.length) {
-      return moment(lastUpdate, 'MM/DD/YY HH:mm').toISOString()
-    } else if (lastUpdate.length === '2/4/2020 3:03'.length) {
-      return moment(lastUpdate, 'MM/DD/YYYY HH:mm').toISOString()
-    } else if (lastUpdate.length === '2/4/2020 3:03:00'.length) {
-      return moment(lastUpdate, 'MM/DD/YYYY HH:mm:ss').toISOString()
+    const match = dateFormats.find(({ template }) => template === lastUpdateTemplate )
+    if (match) {
+      const { format } = match
+      return moment(lastUpdate, format).toISOString()
     }
-    const fallbackDate = moment(normalizedSheetName, 'MMMDD')
-    fallbackDate.set('year', 2020)
-    return fallbackDate.toISOString()
+    return null
   } catch (err) {
-    console.error(err, { lastUpdate, normalizedSheetName })
+    console.error(err, { lastUpdate })
     return null
   }
 }
@@ -43,6 +110,7 @@ const fetchData = async () => {
     const data = sheetNames.reduce((outerAcc, sheetName) => {
       const sheetAsCsv = XLSX.utils.sheet_to_csv(sheets[sheetName])
       const sheetAsJson = csvParse(sheetAsCsv)
+
       const sheetData = sheetAsJson.reduce((acc, line, idx) => {
         if (idx === 0) {
           return acc
@@ -51,7 +119,13 @@ const fetchData = async () => {
         if (!(province || country)) {
           return acc
         }
-        const parsedDate = parseLastUpdate(lastUpdate, sheetName)
+        const parsedDate = parseLastUpdate(lastUpdate)
+        if (!parsedDate) {
+          return acc
+        }
+        if (moment(parsedDate).isAfter(moment())) {
+          return acc
+        }
         return acc.concat({
           province,
           country,
@@ -65,6 +139,7 @@ const fetchData = async () => {
     }, [])
 
     fs.writeFileSync(`./dump.json`, JSON.stringify(data, null, 2))
+    console.log(`updated dump at ${moment().format('DD/MM/YY HH:mm:ss')}`)
 
   } catch (err) {
     return Promise.reject(err)

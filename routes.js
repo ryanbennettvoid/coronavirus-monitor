@@ -9,27 +9,36 @@ module.exports = [
     handlers: [
       async (req, res) => {
         try {
+          const { by=null } = req.query
+
+          if (!['province', 'country'].includes(by)) {
+            throw new Error(`invalid by: ${by}`)
+          }
+
           const data = await getData()
 
-          const mapByRegion = data.reduce((acc, dataPoint) => {
-            const { province } = dataPoint
+          const mapBy = data.reduce((acc, dataPoint) => {
+            const label = dataPoint[by]
+            if (label === '') {
+              return acc
+            }
             return {
               ...acc,
-              [province]: (acc[province] || []).concat(dataPoint)
+              [label]: (acc[label] || []).concat(dataPoint)
             }
           }, {})
 
-          Object.keys(mapByRegion).forEach((regionName) => {
-            mapByRegion[regionName] = mapByRegion[regionName]
+          Object.keys(mapBy).forEach((regionName) => {
+            mapBy[regionName] = mapBy[regionName]
               .sort((a, b) => {
-                return moment(a.lastUpdate).isBefore(b.lastUpdate) ? 1 : -1
+                return moment(a.lastUpdate).isAfter(b.lastUpdate) ? 1 : -1
               })
           })
 
-          res.json(mapByRegion)
+          res.json(mapBy)
         } catch (err) {
           console.error(err)
-          res.status(500).json({ error: err })
+          res.status(500).json({ error: err.message })
         }
       }
     ]
