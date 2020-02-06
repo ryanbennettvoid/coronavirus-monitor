@@ -9,16 +9,12 @@ module.exports = [
     handlers: [
       async (req, res) => {
         try {
-          const { by=null } = req.query
-
-          if (!['province', 'country'].includes(by)) {
-            throw new Error(`invalid by: ${by}`)
-          }
 
           const data = await getData()
 
-          const mapBy = data.reduce((acc, dataPoint) => {
-            const label = dataPoint[by]
+          const mapByRegion = data.reduce((acc, dataPoint) => {
+            const { province, country } = dataPoint
+            const label = province || country
             if (label === '') {
               return acc
             }
@@ -28,14 +24,14 @@ module.exports = [
             }
           }, {})
 
-          Object.keys(mapBy).forEach((regionName) => {
-            mapBy[regionName] = mapBy[regionName]
+          Object.keys(mapByRegion).forEach((regionName) => {
+            mapByRegion[regionName] = mapByRegion[regionName]
               .sort((a, b) => {
                 return moment(a.lastUpdate).isAfter(b.lastUpdate) ? 1 : -1
               })
           })
 
-          res.json(mapBy)
+          res.json(mapByRegion)
         } catch (err) {
           console.error(err)
           res.status(500).json({ error: err.message })
