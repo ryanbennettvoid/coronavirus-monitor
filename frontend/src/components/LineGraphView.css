@@ -1,0 +1,15 @@
+
+.filter {
+  margin-bottom: 10px;
+}
+
+.segments {
+
+}
+
+.segment {
+  text-decoration: underline;
+  margin: 3px;
+  padding: 2px;
+  float: left;
+}

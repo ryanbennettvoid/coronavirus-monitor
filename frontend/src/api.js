@@ -20,8 +20,8 @@ export default class API {
     }
   }
 
-  static getHistory({ by } = {}) {
-    return API.makeRequest('GET', `/history?by=${by}`, {}, {})
+  static getHistory() {
+    return API.makeRequest('GET', `/history`, {}, {})
   }
 
 }
