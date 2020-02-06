@@ -1,0 +1,20 @@
+
+.tabswitcher {
+}
+
+.header {
+  flex: 1;
+  flex-direction: column;
+  display: flex;
+  flex-direction: row;
+  background-color: white;
+}
+
+.label {
+  padding: 15px;
+  cursor: pointer;
+}
+
+.body {
+  flex: 1;
+}
