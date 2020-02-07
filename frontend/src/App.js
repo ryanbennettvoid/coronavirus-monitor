@@ -9,19 +9,15 @@ function App() {
       <TabSwitcher
         tabs={[
           {
-            label: 'History',
+            label: 'Coronavirus Cases Worldwide',
             component: <LineGraphView/>
-          },
-          {
-            label: 'Map',
-            component: <div>maaap!!</div>
-          },
-          {
-            label: 'Search',
-            component: <div>seeearch!!</div>
           }
         ]}
       />
+      <div className='source-info'>
+        Data source:
+        <a href='https://docs.google.com/spreadsheets/d/1wQVypefm946ch4XDp37uZ-wartW4V7ILdg-qYiDXUHM/htmlview'>https://docs.google.com/spreadsheets/d/1wQVypefm946ch4XDp37uZ-wartW4V7ILdg-qYiDXUHM/htmlview</a>
+      </div>
     </div>
   )
 }

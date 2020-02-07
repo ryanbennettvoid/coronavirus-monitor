@@ -5,3 +5,7 @@ body, html, .App {
   padding: 0px;
   background-color: #f9f9f9;
 }
+
+.source-info {
+  margin-left: 20px;
+}

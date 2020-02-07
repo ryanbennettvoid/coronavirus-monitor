@@ -11,16 +11,25 @@ const SHOW_RECOVERED = 'SHOW_RECOVERED'
 
 function LineGraphView() {
 
+  const [isLoading, setIsLoading] = useState(false)
   const [history, setHistory] = useState(null)
   const [filter, setFilter] = useState('')
   const [mode, setMode] = useState(SHOW_CONFIRMED)
 
   useEffect(() => {
+    setIsLoading(true)
     API.getHistory()
       .then((data) => {
         setHistory(data)
       })
+      .finally(() => {
+        setIsLoading(false)
+      })
   }, [])
+
+  if (isLoading) {
+    return <div>loading...</div>
+  }
 
   if (!history) {
     return null
@@ -123,15 +132,15 @@ function LineGraphView() {
       </div>
       <div className='type-filters'>
         <label>
-          Show Confirmed
+          Confirmed Cases
           <input type='checkbox' checked={mode === SHOW_CONFIRMED} onChange={(e) => setMode(SHOW_CONFIRMED)}/>
         </label>
         <label>
-          Show Deaths
+          Deaths
           <input type='checkbox' checked={mode === SHOW_DEATHS} onChange={(e) => setMode(SHOW_DEATHS)}/>
         </label>
         <label>
-          Show Recovered
+          Recovered
           <input type='checkbox' checked={mode === SHOW_RECOVERED} onChange={(e) => setMode(SHOW_RECOVERED)}/>
         </label>
       </div>
