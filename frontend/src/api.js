@@ -1,6 +1,6 @@
 
 const BASE_URL = process.env.NODE_ENV === 'production' ? 
-  'https://blah' :
+  'https://fathomless-tor-70694.herokuapp.com/history' :
   'http://localhost:9999'
 
 export default class API {
