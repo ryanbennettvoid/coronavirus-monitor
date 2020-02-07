@@ -1,6 +1,6 @@
 
 const moment = require('moment')
-const { getData } = require('./data-fetcher')
+const { getData, metadata } = require('./data-fetcher')
 
 module.exports = [
   {
@@ -32,6 +32,20 @@ module.exports = [
           })
 
           res.json(mapByRegion)
+        } catch (err) {
+          console.error(err)
+          res.status(500).json({ error: err.message })
+        }
+      }
+    ]
+  },
+  {
+    method: 'get',
+    endpoint: '/metadata',
+    handlers: [
+      async (req, res) => {
+        try {
+          res.json(metadata)
         } catch (err) {
           console.error(err)
           res.status(500).json({ error: err.message })

@@ -24,4 +24,8 @@ export default class API {
     return API.makeRequest('GET', `/history`, {}, {})
   }
 
+  static getMetadata() {
+    return API.makeRequest('GET', `/metadata`, {}, {})
+  }
+
 }

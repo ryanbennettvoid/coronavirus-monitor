@@ -1,9 +1,24 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import moment from 'moment'
 import './App.css'
 import TabSwitcher from './components/TabSwitcher'
 import LineGraphView from './components/LineGraphView'
+import API from './api'
 
 function App() {
+
+  const [metadata, setMetadata] = useState(null)
+
+  useEffect(() => {
+    API.getMetadata()
+      .then((m) => {
+        setMetadata(m)
+      })
+      .catch(console.error)
+  }, [])
+
+  const dumpDate = metadata ? moment(metadata.dumpLastUpdated) : null
+
   return (
     <div className="App">
       <TabSwitcher
@@ -15,8 +30,17 @@ function App() {
         ]}
       />
       <div className='source-info'>
-        Data source:
-        <a href='https://docs.google.com/spreadsheets/d/1wQVypefm946ch4XDp37uZ-wartW4V7ILdg-qYiDXUHM/htmlview'>https://docs.google.com/spreadsheets/d/1wQVypefm946ch4XDp37uZ-wartW4V7ILdg-qYiDXUHM/htmlview</a>
+        <div>
+          Data source:
+          <a href='https://docs.google.com/spreadsheets/d/1wQVypefm946ch4XDp37uZ-wartW4V7ILdg-qYiDXUHM/htmlview'>https://docs.google.com/spreadsheets/d/1wQVypefm946ch4XDp37uZ-wartW4V7ILdg-qYiDXUHM/htmlview</a>
+        </div>
+        {
+          metadata && (
+            <div className='cache-info'>
+              Server cache last updated: {dumpDate.format('MMM d YYYY HH:mm:ss')} ({dumpDate.fromNow()})
+            </div>
+          )
+        }
       </div>
     </div>
   )
