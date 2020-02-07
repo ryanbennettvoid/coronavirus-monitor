@@ -1,5 +1,7 @@
 
-const BASE_URL = `http://localhost:9999`
+const BASE_URL = process.env.NODE_ENV === 'production' ? 
+  'https://blah' :
+  'http://localhost:9999'
 
 export default class API {
 
