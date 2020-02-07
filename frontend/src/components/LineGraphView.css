@@ -1,5 +1,13 @@
 
-.filter {
+.type-filters {
+  margin-bottom: 10px;
+}
+
+.type-filters > label {
+  margin-right: 10px;
+}
+
+.location-filter {
   margin-bottom: 10px;
   margin-right: 10px;
 }

@@ -2,13 +2,18 @@ import React, { useState, useEffect } from 'react'
 import moment from 'moment'
 import {XYPlot, XAxis, YAxis, HorizontalGridLines, VerticalGridLines, LineMarkSeries} from 'react-vis';
 import API from '../api'
-
+import { countries } from 'countries-list'
 import './LineGraphView.css'
+
+const SHOW_CONFIRMED = 'SHOW_CONFIRMED'
+const SHOW_DEATHS = 'SHOW_DEATHS'
+const SHOW_RECOVERED = 'SHOW_RECOVERED'
 
 function LineGraphView() {
 
   const [history, setHistory] = useState(null)
   const [filter, setFilter] = useState('')
+  const [mode, setMode] = useState(SHOW_CONFIRMED)
 
   useEffect(() => {
     API.getHistory()
@@ -46,16 +51,24 @@ function LineGraphView() {
       const entries = history[label]
       const data = entries
         .map((entry) => {
-          const { confirmed, lastUpdate } = entry
+          const { confirmed, deaths, recovered, lastUpdate } = entry
           const sanitizedConfirm = confirmed / 1
+          const sanitizedDeaths = deaths / 1
+          const santizedRecovered = recovered / 1
 
-          if (sanitizedConfirm > maxY) {
+          if (mode === SHOW_CONFIRMED && sanitizedConfirm > maxY) {
             maxY = sanitizedConfirm
+          } else if (mode === SHOW_DEATHS && sanitizedDeaths > maxY) {
+            maxY = sanitizedDeaths
+          } if (mode === SHOW_RECOVERED && santizedRecovered > maxY) {
+            maxY = santizedRecovered
           }
 
           return {
             x: moment(lastUpdate),
-            y: sanitizedConfirm
+            y: mode === SHOW_CONFIRMED ? sanitizedConfirm :
+               mode === SHOW_DEATHS ? sanitizedDeaths :
+               SHOW_RECOVERED
           }
         })
       return data
@@ -87,17 +100,40 @@ function LineGraphView() {
     setFilter(label.toLowerCase())
   }
 
+  const getCountryCodeForLabel = (label) => {
+    if (label.toLowerCase() === 'uk') {
+      return 'gb'
+    }
+    const labelCountry = history[label][0].country.toLowerCase()
+    const matchedCountry = Object.keys(countries).find((countryCode) => countries[countryCode].name.toLowerCase() === labelCountry)
+    return matchedCountry || labelCountry.toLowerCase()
+  }
+
   return (
     <div className="linegraphview">
       <div>
         <input 
-          className='filter' 
+          className='location-filter' 
           type='text' 
           placeholder='filter'
           onChange={(e) => setFilter(e.target.value)}
           value={filter}
         />
-        Showing ({showingCountFiltered}/{showingCountTotal}):
+        Showing Regions ({showingCountFiltered}/{showingCountTotal}):
+      </div>
+      <div className='type-filters'>
+        <label>
+          Show Confirmed
+          <input type='checkbox' checked={mode === SHOW_CONFIRMED} onChange={(e) => setMode(SHOW_CONFIRMED)}/>
+        </label>
+        <label>
+          Show Deaths
+          <input type='checkbox' checked={mode === SHOW_DEATHS} onChange={(e) => setMode(SHOW_DEATHS)}/>
+        </label>
+        <label>
+          Show Recovered
+          <input type='checkbox' checked={mode === SHOW_RECOVERED} onChange={(e) => setMode(SHOW_RECOVERED)}/>
+        </label>
       </div>
       <div>
         <div className='segments'>
@@ -105,7 +141,10 @@ function LineGraphView() {
             labelsInChina.length > 0 && (
               <div className='segments-divider'>
                 China: {
-                  labelsInChina.map((label) => <button className='segment' onClick={onClickSegment.bind(this, label)}>{label}</button>)
+                  labelsInChina.map((label) => <button className='segment' onClick={onClickSegment.bind(this, label)}>
+                    <img src="https://www.countryflags.io/cn/flat/16.png"/>
+                    {label}
+                  </button>)
                 }
               </div>
             )
@@ -114,7 +153,10 @@ function LineGraphView() {
             labelsOutsideChina.length > 0 && (
               <div className='segments-divider'>
                 Outside China: {
-                  labelsOutsideChina.map((label) => <button className='segment' onClick={onClickSegment.bind(this, label)}>{label}</button>)
+                  labelsOutsideChina.map((label) => <button className='segment' onClick={onClickSegment.bind(this, label)}>
+                    <img src={`https://www.countryflags.io/${getCountryCodeForLabel(label)}/flat/16.png`}/>
+                    {label}
+                  </button>)
                 }
               </div>
             )
@@ -137,11 +179,11 @@ function LineGraphView() {
           )
         }
         <XAxis 
-          title='time'
+          title='Time'
           tickFormat={(d) => moment(d).format('MMM DD')}
         />
         <YAxis 
-          title='confirmed'
+          title='Confirmed Cases'
           left={15}
         />
       </XYPlot>
