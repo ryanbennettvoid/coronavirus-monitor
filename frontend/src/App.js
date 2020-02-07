@@ -30,10 +30,6 @@ function App() {
         ]}
       />
       <div className='source-info'>
-        <div>
-          Data source:
-          <a target='_blank' href='https://docs.google.com/spreadsheets/d/1wQVypefm946ch4XDp37uZ-wartW4V7ILdg-qYiDXUHM/htmlview'>https://docs.google.com/spreadsheets/d/1wQVypefm946ch4XDp37uZ-wartW4V7ILdg-qYiDXUHM/htmlview</a>
-        </div>
         {
           metadata && (
             <div className='cache-info'>
@@ -41,6 +37,14 @@ function App() {
             </div>
           )
         }
+        <div className='link-wrapper'>
+          Data source:
+          <a target='_blank' href='https://docs.google.com/spreadsheets/d/1wQVypefm946ch4XDp37uZ-wartW4V7ILdg-qYiDXUHM/htmlview'>https://docs.google.com/spreadsheets/d/1wQVypefm946ch4XDp37uZ-wartW4V7ILdg-qYiDXUHM/htmlview</a>
+        </div>
+        <div className='link-wrapper'>
+          Code:
+          <a target='_blank' href='https://github.com/ryanbennettvoid/coronavirus-monitor'>https://github.com/ryanbennettvoid/coronavirus-monitor</a>
+        </div>
       </div>
     </div>
   )

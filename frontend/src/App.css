@@ -9,3 +9,11 @@ body, html, .App {
 .source-info {
   margin-left: 20px;
 }
+
+.link-wrapper {
+  margin-top: 3px;
+}
+
+.link-wrapper a {
+  margin-left: 5px;
+}
