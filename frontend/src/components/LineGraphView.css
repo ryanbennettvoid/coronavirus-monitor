@@ -1,15 +1,18 @@
 
 .filter {
   margin-bottom: 10px;
+  margin-right: 10px;
 }
 
 .segments {
-
+  display: flex;
+  flex-direction: row;
 }
 
 .segment {
-  text-decoration: underline;
-  margin: 3px;
-  padding: 2px;
-  float: left;
+  
+}
+
+.segments-divider {
+  
 }

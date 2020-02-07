@@ -27,7 +27,9 @@ function LineGraphView() {
   //   {x: 3, y: 15}
   // ]
 
-  const filteredLabels = Object.keys(history)
+  const allLabels = Object.keys(history)
+
+  const filteredLabels = allLabels
     .filter((label) => {
       if (filter) {
         return label.toLowerCase().includes(filter.toLowerCase())
@@ -35,6 +37,8 @@ function LineGraphView() {
       return true
     })
 
+  const showingCountTotal = allLabels.length
+  const showingCountFiltered = filteredLabels.length
   let maxY = 0
 
   const plotData = filteredLabels
@@ -57,26 +61,34 @@ function LineGraphView() {
       return data
     })
 
+  const { labelsInChina, labelsOutsideChina } = filteredLabels
+    .reduce((acc, label) => {
+      if (history[label][0].country.toLowerCase().includes('china')) {
+        return {
+          ...acc,
+          labelsInChina: [...acc.labelsInChina, label]
+        }
+      }
+      return {
+        ...acc,
+        labelsOutsideChina: [...acc.labelsOutsideChina, label]
+      }
+    }, {
+      labelsInChina: [],
+      labelsOutsideChina: []
+    })
+
   const visualMaxY =  maxY <= 5 ? 20 :
                       maxY <= 10 ? 50 :
                       maxY <= 100 ? 100 :
                       maxY * 1.2
 
   const onClickSegment = (label) => {
-    console.log('hi', label)
     setFilter(label.toLowerCase())
   }
 
   return (
     <div className="linegraphview">
-      <div>
-        Showing:
-        <div className='segments'>
-          {
-            filteredLabels.map((label) => <button className='segment' onClick={onClickSegment.bind(this, label)}>{label}</button>)
-          }
-        </div>
-      </div>
       <div>
         <input 
           className='filter' 
@@ -85,6 +97,29 @@ function LineGraphView() {
           onChange={(e) => setFilter(e.target.value)}
           value={filter}
         />
+        Showing ({showingCountFiltered}/{showingCountTotal}):
+      </div>
+      <div>
+        <div className='segments'>
+          {
+            labelsInChina.length > 0 && (
+              <div className='segments-divider'>
+                China: {
+                  labelsInChina.map((label) => <button className='segment' onClick={onClickSegment.bind(this, label)}>{label}</button>)
+                }
+              </div>
+            )
+          }
+          {
+            labelsOutsideChina.length > 0 && (
+              <div className='segments-divider'>
+                Outside China: {
+                  labelsOutsideChina.map((label) => <button className='segment' onClick={onClickSegment.bind(this, label)}>{label}</button>)
+                }
+              </div>
+            )
+          }
+        </div>
       </div>
       <XYPlot
         xType='time'
