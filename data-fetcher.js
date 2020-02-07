@@ -11,6 +11,8 @@ const XLSX = require('xlsx')
 const csvParse = require('csv-parse/lib/sync')
 const moment = require('moment')
 
+const metadata = {}
+
 const dateFormats = [
   {
     template: 'X/X/XX XX:XX',
@@ -141,6 +143,7 @@ const fetchData = async () => {
     }, [])
 
     fs.writeFileSync(`./dump.json`, JSON.stringify(data, null, 2))
+    metadata.dumpLastUpdated = moment().toISOString()
     console.log(`updated dump at ${moment().format('DD/MM/YY HH:mm:ss')}`)
 
   } catch (err) {
@@ -168,5 +171,6 @@ const init = () => {
 
 module.exports = {
   init,
-  getData
+  getData,
+  metadata
 }
