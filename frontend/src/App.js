@@ -33,7 +33,7 @@ function App() {
         {
           metadata && (
             <div className='cache-info'>
-              Server cache last updated: {dumpDate.format('MMM d YYYY HH:mm:ss')} ({dumpDate.fromNow()})
+              Server cache last updated: {dumpDate.format('MMM D YYYY HH:mm:ss')} ({dumpDate.fromNow()})
             </div>
           )
         }
