@@ -18,7 +18,11 @@
 }
 
 .segment {
-  
+  opacity: 0.5;
+}
+
+.segment.selected {
+  opacity: 1;
 }
 
 .segments-divider {

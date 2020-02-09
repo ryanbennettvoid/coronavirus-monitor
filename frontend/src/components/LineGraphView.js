@@ -83,17 +83,17 @@ function LineGraphView() {
       return data
     })
 
-  const { labelsInChina, labelsOutsideChina } = filteredLabels
+  const { labelsInChina, labelsOutsideChina } = allLabels
     .reduce((acc, label) => {
       if (history[label][0].country.toLowerCase().includes('china')) {
         return {
           ...acc,
-          labelsInChina: [...acc.labelsInChina, label]
+          labelsInChina: [...acc.labelsInChina, { label, selected: filteredLabels.includes(label) }]
         }
       }
       return {
         ...acc,
-        labelsOutsideChina: [...acc.labelsOutsideChina, label]
+        labelsOutsideChina: [...acc.labelsOutsideChina, { label, selected: filteredLabels.includes(label) }]
       }
     }, {
       labelsInChina: [],
@@ -150,7 +150,7 @@ function LineGraphView() {
             labelsInChina.length > 0 && (
               <div className='segments-divider'>
                 China: {
-                  labelsInChina.map((label) => <button className='segment' onClick={onClickSegment.bind(this, label)}>
+                  labelsInChina.map(({ label, selected }) => <button className={`segment ${selected ? 'selected' : ''}`} onClick={onClickSegment.bind(this, label)}>
                     <img src="https://www.countryflags.io/cn/flat/16.png"/>
                     {label}
                   </button>)
@@ -162,7 +162,7 @@ function LineGraphView() {
             labelsOutsideChina.length > 0 && (
               <div className='segments-divider'>
                 Outside China: {
-                  labelsOutsideChina.map((label) => <button className='segment' onClick={onClickSegment.bind(this, label)}>
+                  labelsOutsideChina.map(({ label, selected }) => <button className={`segment ${selected ? 'selected' : ''}`} onClick={onClickSegment.bind(this, label)}>
                     <img src={`https://www.countryflags.io/${getCountryCodeForLabel(label)}/flat/16.png`}/>
                     {label}
                   </button>)
