@@ -2,15 +2,12 @@
 const PORT = process.env.PORT || 9999
 
 const express = require('express')
-const bodyParser = require('body-parser')
 const cors = require('cors')
 
 const routes = require('./routes')
-const { init: initDataFetcher } = require('./data-fetcher')
 
 const main = async () => {
   try {
-    initDataFetcher()
 
     const app = express()
     app.use(cors())
