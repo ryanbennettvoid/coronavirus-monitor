@@ -1,23 +1,12 @@
-import React, { useEffect, useState } from 'react'
-import moment from 'moment'
+import React from 'react'
 import './App.css'
 import TabSwitcher from './components/TabSwitcher'
 import LineGraphView from './components/LineGraphView'
-import API from './api'
+
+const SOURCE_URL = 'https://github.com/CSSEGISandData/COVID-19'
+const PROJECT_URL = 'https://github.com/ryanbennettvoid/coronavirus-monitor'
 
 function App() {
-
-  const [metadata, setMetadata] = useState(null)
-
-  useEffect(() => {
-    API.getMetadata()
-      .then((m) => {
-        setMetadata(m)
-      })
-      .catch(console.error)
-  }, [])
-
-  const dumpDate = metadata ? moment(metadata.dumpLastUpdated) : null
 
   return (
     <div className="App">
@@ -30,20 +19,11 @@ function App() {
         ]}
       />
       <div className='source-info'>
-        {
-          metadata && (
-            <div className='cache-info'>
-              Server cache last updated: {dumpDate.format('MMM D YYYY HH:mm:ss')} ({dumpDate.fromNow()})
-            </div>
-          )
-        }
         <div className='link-wrapper'>
-          Data source:
-          <a target='_blank' href='https://docs.google.com/spreadsheets/d/1wQVypefm946ch4XDp37uZ-wartW4V7ILdg-qYiDXUHM/htmlview'>https://docs.google.com/spreadsheets/d/1wQVypefm946ch4XDp37uZ-wartW4V7ILdg-qYiDXUHM/htmlview</a>
+          Data source: <a target='_blank' href={SOURCE_URL}>{SOURCE_URL}</a>
         </div>
         <div className='link-wrapper'>
-          Code:
-          <a target='_blank' href='https://github.com/ryanbennettvoid/coronavirus-monitor'>https://github.com/ryanbennettvoid/coronavirus-monitor</a>
+          Code: <a target='_blank' href={PROJECT_URL}>{PROJECT_URL}</a>
         </div>
       </div>
     </div>

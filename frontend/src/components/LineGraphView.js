@@ -57,27 +57,23 @@ function LineGraphView() {
 
   const plotData = filteredLabels
     .map((label) => {
-      const entries = history[label]
+
+      const entries = mode === SHOW_CONFIRMED ? history[label].confirmed :
+                      mode === SHOW_DEATHS ?  history[label].deaths : 
+                      mode === SHOW_RECOVERED ? history[label].recovered :
+                      []
+
       const data = entries
         .map((entry) => {
-          const { confirmed, deaths, recovered, lastUpdate } = entry
-          const sanitizedConfirm = confirmed / 1
-          const sanitizedDeaths = deaths / 1
-          const santizedRecovered = recovered / 1
+          const { date, count } = entry
 
-          if (mode === SHOW_CONFIRMED && sanitizedConfirm > maxY) {
-            maxY = sanitizedConfirm
-          } else if (mode === SHOW_DEATHS && sanitizedDeaths > maxY) {
-            maxY = sanitizedDeaths
-          } if (mode === SHOW_RECOVERED && santizedRecovered > maxY) {
-            maxY = santizedRecovered
+          if (count > maxY) {
+            maxY = count
           }
 
           return {
-            x: moment(lastUpdate),
-            y: mode === SHOW_CONFIRMED ? sanitizedConfirm :
-               mode === SHOW_DEATHS ? sanitizedDeaths :
-               SHOW_RECOVERED
+            x: moment(date),
+            y: count / 1
           }
         })
       return data
@@ -85,7 +81,7 @@ function LineGraphView() {
 
   const { labelsInChina, labelsOutsideChina } = allLabels
     .reduce((acc, label) => {
-      if (history[label][0].country.toLowerCase().includes('china')) {
+      if (history[label].isChina) {
         return {
           ...acc,
           labelsInChina: [...acc.labelsInChina, { label, selected: filteredLabels.includes(label) }]
@@ -113,7 +109,7 @@ function LineGraphView() {
     if (label.toLowerCase() === 'uk') {
       return 'gb'
     }
-    const labelCountry = history[label][0].country.toLowerCase()
+    const labelCountry = history[label].country.toLowerCase()
     const matchedCountry = Object.keys(countries).find((countryCode) => countries[countryCode].name.toLowerCase() === labelCountry)
     return matchedCountry || labelCountry.toLowerCase()
   }
