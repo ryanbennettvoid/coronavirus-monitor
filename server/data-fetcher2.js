@@ -3,9 +3,9 @@ const fetch = require('node-fetch')
 const csvParse = require('csv-parse/lib/sync')
 const moment = require('moment')
 
-const URL_CONFIRMED = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/time_series/time_series_2019-ncov-Confirmed.csv'
-const URL_DEATHS = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/time_series/time_series_2019-ncov-Deaths.csv'
-const URL_RECOVERED = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/time_series/time_series_2019-ncov-Recovered.csv'
+const URL_CONFIRMED = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/archived_data/time_series/time_series_2019-ncov-Confirmed.csv'
+const URL_DEATHS = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/archived_data/time_series/time_series_2019-ncov-Deaths.csv'
+const URL_RECOVERED = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/archived_data/time_series/time_series_2019-ncov-Recovered.csv'
 
 const fetchFile = async (url) => {
   try {
