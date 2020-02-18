@@ -5,6 +5,7 @@ import {XYPlot, XAxis, YAxis, HorizontalGridLines, VerticalGridLines, LineMarkSe
 import API from '../api'
 import { countries } from 'countries-list'
 import './LineGraphView.css'
+import Loading from './Loading'
 
 const SHOW_CONFIRMED = 'SHOW_CONFIRMED'
 const SHOW_DEATHS = 'SHOW_DEATHS'
@@ -16,6 +17,7 @@ function LineGraphView() {
   const [history, setHistory] = useState(null)
   const [filter, setFilter] = useState({})
   const [mode, setMode] = useState(SHOW_CONFIRMED)
+  const [ftux, setFtux] = useState(true)
 
   useEffect(() => {
     setIsLoading(true)
@@ -34,7 +36,7 @@ function LineGraphView() {
   }, [])
 
   if (isLoading) {
-    return <div>loading...</div>
+    return <Loading/>
   }
 
   if (!history) {
@@ -104,11 +106,32 @@ function LineGraphView() {
                       maxY <= 100 ? 100 :
                       maxY * 1.2
 
+  const selectAll = () => {
+    setFilter(
+      allLabels.reduce((acc, label) => ({ ...acc, [label]: true }), {})
+    )
+  }
+
+  const selectNone = () => {
+    setFilter({})
+  }
+
   const onClickSegment = (label) => {
-    setFilter({
-      ...filter,
-      [label]: !filter[label]
-    })
+    if (ftux) {
+      const newFilter = allLabels.reduce((acc, l) => {
+        return {
+          ...acc,
+          [l]: l === label
+        }
+      }, {})
+      setFilter(newFilter)
+    } else {
+      setFilter({
+        ...filter,
+        [label]: !filter[label]
+      })
+    }
+    setFtux(false)
   }
 
   const countryKeys = Object.keys(countries)
@@ -123,16 +146,6 @@ function LineGraphView() {
               countryCode.toLowerCase() === labelCountry.toLowerCase()
     })
     return matchedCountry
-  }
-
-  const selectAll = () => {
-    setFilter(
-      allLabels.reduce((acc, label) => ({ ...acc, [label]: true }), {})
-    )
-  }
-
-  const selectNone = () => {
-    setFilter({})
   }
 
   const legendItems = Object.keys(filter).filter((k) => filter[k]).slice(0, 12)
@@ -158,6 +171,11 @@ function LineGraphView() {
           <input type='checkbox' checked={mode === SHOW_RECOVERED} onChange={(e) => setMode(SHOW_RECOVERED)}/>
         </label>
       </div>
+      {
+        ftux && (
+          <div className='hint'>Click a region below to filter</div>
+        )
+      }
       <div>
         <div className='segments'>
           {
