@@ -28,3 +28,13 @@
 .segments-divider {
   
 }
+
+.chart {
+  float: left;
+}
+
+.legend {
+  position: absolute;
+  left: 100px;
+  margin-top: 20px;
+}

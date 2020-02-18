@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import moment from 'moment'
-import {XYPlot, XAxis, YAxis, HorizontalGridLines, VerticalGridLines, LineMarkSeries} from 'react-vis';
+import {XYPlot, XAxis, YAxis, HorizontalGridLines, VerticalGridLines, LineMarkSeries, DiscreteColorLegend} from 'react-vis';
+
 import API from '../api'
 import { countries } from 'countries-list'
 import './LineGraphView.css'
@@ -13,7 +14,7 @@ function LineGraphView() {
 
   const [isLoading, setIsLoading] = useState(false)
   const [history, setHistory] = useState(null)
-  const [filter, setFilter] = useState('')
+  const [filter, setFilter] = useState({})
   const [mode, setMode] = useState(SHOW_CONFIRMED)
 
   useEffect(() => {
@@ -21,6 +22,11 @@ function LineGraphView() {
     API.getHistory()
       .then((data) => {
         setHistory(data)
+        const newFilter = Object.keys(data)
+          .reduce((acc, label) => {
+            return { ...acc, [label]: true }
+          }, {})
+        setFilter(newFilter)
       })
       .finally(() => {
         setIsLoading(false)
@@ -45,10 +51,7 @@ function LineGraphView() {
 
   const filteredLabels = allLabels
     .filter((label) => {
-      if (filter) {
-        return label.toLowerCase().includes(filter.toLowerCase())
-      }
-      return true
+      return filter[label]
     })
 
   const showingCountTotal = allLabels.length
@@ -102,29 +105,44 @@ function LineGraphView() {
                       maxY * 1.2
 
   const onClickSegment = (label) => {
-    setFilter(label.toLowerCase())
+    setFilter({
+      ...filter,
+      [label]: !filter[label]
+    })
   }
+
+  const countryKeys = Object.keys(countries)
 
   const getCountryCodeForLabel = (label) => {
     if (label.toLowerCase() === 'uk') {
       return 'gb'
     }
     const labelCountry = history[label].country.toLowerCase()
-    const matchedCountry = Object.keys(countries).find((countryCode) => countries[countryCode].name.toLowerCase() === labelCountry)
-    return matchedCountry || labelCountry.toLowerCase()
+    const matchedCountry = countryKeys.find((countryCode) => {
+      return  countries[countryCode].name.toLowerCase() === labelCountry ||
+              countryCode.toLowerCase() === labelCountry.toLowerCase()
+    })
+    return matchedCountry
   }
+
+  const selectAll = () => {
+    setFilter(
+      allLabels.reduce((acc, label) => ({ ...acc, [label]: true }), {})
+    )
+  }
+
+  const selectNone = () => {
+    setFilter({})
+  }
+
+  const legendItems = Object.keys(filter).filter((k) => filter[k]).slice(0, 12)
 
   return (
     <div className="linegraphview">
       <div>
-        <input 
-          className='location-filter' 
-          type='text' 
-          placeholder='filter'
-          onChange={(e) => setFilter(e.target.value)}
-          value={filter}
-        />
-        Showing Regions ({showingCountFiltered}/{showingCountTotal}):
+        Showing Regions ({showingCountFiltered}/{showingCountTotal})
+        <button type='button' onClick={() => selectAll()}>Select All</button>
+        <button type='button' onClick={() => selectNone()}>Clear Selection</button>
       </div>
       <div className='type-filters'>
         <label>
@@ -159,7 +177,14 @@ function LineGraphView() {
               <div className='segments-divider'>
                 Outside China: {
                   labelsOutsideChina.map(({ label, selected }) => <button className={`segment ${selected ? 'selected' : ''}`} onClick={onClickSegment.bind(this, label)}>
-                    <img src={`https://www.countryflags.io/${getCountryCodeForLabel(label)}/flat/16.png`}/>
+                    {
+                      (() => {
+                        const countryCode = getCountryCodeForLabel(label)
+                        const src = countryCode ? `https://www.countryflags.io/${countryCode}/flat/16.png` :
+                                    `https://placehold.it/16/000/fff?text=${label.charAt(0)}`
+                        return <img src={src}/>
+                      })()
+                    }
                     {label}
                   </button>)
                 }
@@ -169,6 +194,7 @@ function LineGraphView() {
         </div>
       </div>
       <XYPlot
+        className='chart'
         xType='time'
         width={1200}
         height={500}
@@ -192,6 +218,7 @@ function LineGraphView() {
           left={15}
         />
       </XYPlot>
+      <DiscreteColorLegend className='legend' height={400} width={300} items={legendItems} />
     </div>
   )
 }
