@@ -18,6 +18,8 @@ function LineGraphView() {
   const [filter, setFilter] = useState({})
   const [mode, setMode] = useState(SHOW_CONFIRMED)
   const [ftux, setFtux] = useState(true)
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth)
+
 
   useEffect(() => {
     setIsLoading(true)
@@ -33,6 +35,11 @@ function LineGraphView() {
       .finally(() => {
         setIsLoading(false)
       })
+
+    window.addEventListener('resize', () => {
+      setWindowWidth(window.innerWidth)
+    })
+    return () => window.removeEventListener('resize')
   }, [])
 
   if (isLoading) {
@@ -214,7 +221,7 @@ function LineGraphView() {
       <XYPlot
         className='chart'
         xType='time'
-        width={1200}
+        width={Math.max(500, windowWidth - 30)}
         height={500}
         yDomain={[0, visualMaxY]}
       >
