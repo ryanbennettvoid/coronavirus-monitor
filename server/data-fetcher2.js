@@ -27,6 +27,8 @@ const fetchRecovered = () => fetchFile(URL_RECOVERED)
 //     "country": "Mainland China",
 //     "region": "Hubei",
 //     "isChina": true,
+//     "isAmerica": false,
+//     "latestConfirmed": 1234,
 //     "confirmed": [
 //       { "date": "xxx", "count": "yyy" },
 //       ...
@@ -53,7 +55,17 @@ const normalizeCsv = async (csv, which) => {
       .map((row) => {
         const [ province, country, lat, lng, ...values ] = row
         const region = province || country
-        return {
+        const whichValues = values
+            .map((value, idx) => ({
+              date: moment(dates[idx], 'M/D/YY HH:mm'),
+              count: parseInt(value)
+            }))
+            .filter(({count}) => !isNaN(count))
+        const mergeObj = which === 'confirmed' ? {
+          latestConfirmed: whichValues.slice(-1)[0].count,
+        } : {}
+
+        return Object.assign({}, {
           province,
           country,
           region,
@@ -61,13 +73,9 @@ const normalizeCsv = async (csv, which) => {
           isAmerica: country.toLowerCase() === 'us',
           lat,
           lng,
-          [which]: values
-            .map((value, idx) => ({
-              date: moment(dates[idx], 'M/D/YY HH:mm'),
-              count: parseInt(value)
-            }))
-            .filter(({count}) => !isNaN(count))
-        }
+          [which]: whichValues
+        }, mergeObj)
+        return obj
       })
   } catch (err) {
     return Promise.reject(err)

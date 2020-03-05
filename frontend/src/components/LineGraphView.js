@@ -15,7 +15,6 @@ function RegionsFilter(props) {
   const { 
     showingCountFiltered, 
     showingCountTotal,
-    selectAll,
     selectNone,
     setMode,
     mode,
@@ -27,8 +26,7 @@ function RegionsFilter(props) {
       <div className='region-filter-left'>
         <div className='selected-count'>
           Showing Regions ({showingCountFiltered}/{showingCountTotal})
-          <button type='button' onClick={() => selectAll()}>Select All</button>
-          <button type='button' onClick={() => selectNone()}>Clear Selection</button>
+          <button type='button' onClick={() => selectNone()}>Clear All Selections</button>
         </div>
         <div className='type-filters'>
           <label>
@@ -197,8 +195,8 @@ function LineGraphView() {
   const countryKeys = Object.keys(countries)
 
   const getCountryCodeForLabel = (label) => {
-    if (label.toLowerCase() === 'uk') {
-      return 'gb'
+    switch (label.toLowerCase()) {
+      case 'uk': return 'gb'
     }
     const labelCountry = history[label].country.toLowerCase()
     const matchedCountry = countryKeys.find((countryCode) => {
@@ -206,6 +204,10 @@ function LineGraphView() {
               countryCode.toLowerCase() === labelCountry.toLowerCase()
     })
     return matchedCountry
+  }
+
+  const getConfirmedForLabel = (label) => {
+    return history[label].latestConfirmed
   }
 
   const legendItems = Object.keys(filter).filter((k) => filter[k]).slice(0, 12)
@@ -224,19 +226,11 @@ function LineGraphView() {
       <div>
         <div className='segments'>
           {
-            labelsChina.length > 0 && (
-              <div className='segments-divider'>
-                China: {
-                  labelsChina.map(({ label, selected }) => <button className={`segment ${selected ? 'selected' : ''}`} onClick={onClickSegment.bind(this, label)}>
-                    <img src="https://www.countryflags.io/cn/flat/16.png"/>
-                    {label}
-                  </button>)
-                }
-              </div>
-            )
-          }
-          {
             [
+              {
+                data: labelsChina,
+                name: 'China'
+              },
               {
                 data: labelsAmerica,
                 name: 'United States'
@@ -250,16 +244,18 @@ function LineGraphView() {
                 data.length > 0 && (
                   <div className='segments-divider'>
                     {name}: {
-                      data.map(({ label, selected }) => <button className={`segment ${selected ? 'selected' : ''}`} onClick={onClickSegment.bind(this, label)}>
+                      data
+                      .sort((a, b) => getConfirmedForLabel(b.label) - getConfirmedForLabel(a.label))
+                      .map(({ label, selected }) => <button className={`segment ${selected ? 'selected' : ''}`} onClick={onClickSegment.bind(this, label)}>
                         {
                           (() => {
-                            const countryCode = getCountryCodeForLabel(label)
+                            const countryCode = name === 'China' ? 'cn' : getCountryCodeForLabel(label)
                             const src = countryCode ? `https://www.countryflags.io/${countryCode}/flat/16.png` :
                                         `https://placehold.it/16/000/fff?text=${label.charAt(0)}`
-                            return <img src={src}/>
+                            return <img className='segment-flag' src={src}/>
                           })()
                         }
-                        {label}
+                        <div className='segment-text'>{label}</div>
                       </button>)
                     }
                   </div>

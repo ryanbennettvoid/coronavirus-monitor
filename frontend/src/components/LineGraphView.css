@@ -34,16 +34,30 @@ padding-left: 10px;
   flex-direction: row;
 }
 
+.segments-divider {
+}
+
 .segment {
   opacity: 0.5;
+  height: 22px;
+  padding: 3px;
+  margin: 0px;
+  align-items: center;
+}
+
+.segment-flag {
+  display: block;
+  float: left;
+}
+
+.segment-text {
+  float: left;
+  padding-left: 2px;
+  line-height: 13px;
 }
 
 .segment.selected {
   opacity: 1;
-}
-
-.segments-divider {
-  
 }
 
 .chart {
