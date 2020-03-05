@@ -371,37 +371,43 @@ function LineGraphView() {
           }
         </div>
       </div>
-      <XYPlot
-        className='chart'
-        xType='time'
-        width={Math.max(500, windowWidth - 30)}
-        height={500}
-        yDomain={[0, visualMaxY]}
-      >
-        <HorizontalGridLines />
-        <VerticalGridLines />
-        {
-          plotData.map((data, idx) => <LineMarkSeries 
-            key={`data${idx}`} 
-            data={data}
+      {
+        showingCountFiltered > 0 && (
+          <React.Fragment>
+            <XYPlot
+              className='chart'
+              xType='time'
+              width={Math.max(500, windowWidth - 30)}
+              height={500}
+              yDomain={[0, visualMaxY]}
+            >
+              <HorizontalGridLines />
+              <VerticalGridLines />
+              {
+                plotData.map((data, idx) => <LineMarkSeries 
+                  key={`data${idx}`} 
+                  data={data}
+                  />
+                )
+              }
+              <XAxis 
+                title='Time'
+                tickFormat={(d) => moment(d).format('MMM DD')}
+              />
+              <YAxis 
+                title='Confirmed Cases'
+                left={15}
+              />
+            </XYPlot>
+            <DiscreteColorLegend 
+              className='legend' 
+              height={400} 
+              width={Math.max(500, windowWidth - 30)}
+              items={legendItems}
             />
-          )
-        }
-        <XAxis 
-          title='Time'
-          tickFormat={(d) => moment(d).format('MMM DD')}
-        />
-        <YAxis 
-          title='Confirmed Cases'
-          left={15}
-        />
-      </XYPlot>
-      <DiscreteColorLegend 
-        className='legend' 
-        height={400} 
-        width={Math.max(500, windowWidth - 30)}
-        items={legendItems}
-      />
+          </React.Fragment>
+        )
+      }
     </div>
   )
 }
