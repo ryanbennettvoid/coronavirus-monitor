@@ -11,6 +11,51 @@ const SHOW_CONFIRMED = 'SHOW_CONFIRMED'
 const SHOW_DEATHS = 'SHOW_DEATHS'
 const SHOW_RECOVERED = 'SHOW_RECOVERED'
 
+function RegionsFilter(props) {
+  const { 
+    showingCountFiltered, 
+    showingCountTotal,
+    selectAll,
+    selectNone,
+    setMode,
+    mode,
+    ftux
+  } = props
+
+  return (
+    <div className='region-filter-container'>
+      <div className='region-filter-left'>
+        <div className='selected-count'>
+          Showing Regions ({showingCountFiltered}/{showingCountTotal})
+          <button type='button' onClick={() => selectAll()}>Select All</button>
+          <button type='button' onClick={() => selectNone()}>Clear Selection</button>
+        </div>
+        <div className='type-filters'>
+          <label>
+            Confirmed Cases
+            <input type='checkbox' checked={mode === SHOW_CONFIRMED} onChange={(e) => setMode(SHOW_CONFIRMED)}/>
+          </label>
+          <label>
+            Deaths
+            <input type='checkbox' checked={mode === SHOW_DEATHS} onChange={(e) => setMode(SHOW_DEATHS)}/>
+          </label>
+          <label>
+            Recovered
+            <input type='checkbox' checked={mode === SHOW_RECOVERED} onChange={(e) => setMode(SHOW_RECOVERED)}/>
+          </label>
+        </div>
+      </div>
+      <div className='region-filter-right'>
+        {
+          ftux && (
+            <div className='hint'>Click regions below to filter and compare</div>
+          )
+        }
+      </div>
+    </div>
+  )
+}
+
 function LineGraphView() {
 
   const [isLoading, setIsLoading] = useState(false)
@@ -19,7 +64,6 @@ function LineGraphView() {
   const [mode, setMode] = useState(SHOW_CONFIRMED)
   const [ftux, setFtux] = useState(true)
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
-
 
   useEffect(() => {
     setIsLoading(true)
@@ -36,10 +80,12 @@ function LineGraphView() {
         setIsLoading(false)
       })
 
-    window.addEventListener('resize', () => {
+    const listenerHandler = () => {
       setWindowWidth(window.innerWidth)
-    })
-    return () => window.removeEventListener('resize')
+    }
+
+    window.addEventListener('resize', listenerHandler)
+    return () => window.removeEventListener('resize', listenerHandler)
   }, [])
 
   if (isLoading) {
@@ -91,21 +137,28 @@ function LineGraphView() {
       return data
     })
 
-  const { labelsInChina, labelsOutsideChina } = allLabels
+  const { labelsChina, labelsAmerica, labelsRest } = allLabels
     .reduce((acc, label) => {
+      const selected = filteredLabels.includes(label)
       if (history[label].isChina) {
         return {
           ...acc,
-          labelsInChina: [...acc.labelsInChina, { label, selected: filteredLabels.includes(label) }]
+          labelsChina: [...acc.labelsChina, { label, selected }]
+        }
+      } else if (history[label].isAmerica) {
+        return {
+          ...acc,
+          labelsAmerica: [...acc.labelsAmerica, { label, selected }]
         }
       }
       return {
         ...acc,
-        labelsOutsideChina: [...acc.labelsOutsideChina, { label, selected: filteredLabels.includes(label) }]
+        labelsRest: [...acc.labelsRest, { label, selected }]
       }
     }, {
-      labelsInChina: [],
-      labelsOutsideChina: []
+      labelsChina: [],
+      labelsAmerica: [],
+      labelsRest: []
     })
 
   const visualMaxY =  maxY <= 5 ? 20 :
@@ -159,37 +212,22 @@ function LineGraphView() {
 
   return (
     <div className="linegraphview">
-      <div>
-        Showing Regions ({showingCountFiltered}/{showingCountTotal})
-        <button type='button' onClick={() => selectAll()}>Select All</button>
-        <button type='button' onClick={() => selectNone()}>Clear Selection</button>
-      </div>
-      <div className='type-filters'>
-        <label>
-          Confirmed Cases
-          <input type='checkbox' checked={mode === SHOW_CONFIRMED} onChange={(e) => setMode(SHOW_CONFIRMED)}/>
-        </label>
-        <label>
-          Deaths
-          <input type='checkbox' checked={mode === SHOW_DEATHS} onChange={(e) => setMode(SHOW_DEATHS)}/>
-        </label>
-        <label>
-          Recovered
-          <input type='checkbox' checked={mode === SHOW_RECOVERED} onChange={(e) => setMode(SHOW_RECOVERED)}/>
-        </label>
-      </div>
-      {
-        ftux && (
-          <div className='hint'>Click a region below to filter</div>
-        )
-      }
+      <RegionsFilter
+        showingCountFiltered={showingCountFiltered}
+        showingCountTotal={showingCountTotal}
+        selectAll={selectAll}
+        selectNone={selectNone}
+        setMode={setMode}
+        mode={mode}
+        ftux={ftux}
+      />
       <div>
         <div className='segments'>
           {
-            labelsInChina.length > 0 && (
+            labelsChina.length > 0 && (
               <div className='segments-divider'>
                 China: {
-                  labelsInChina.map(({ label, selected }) => <button className={`segment ${selected ? 'selected' : ''}`} onClick={onClickSegment.bind(this, label)}>
+                  labelsChina.map(({ label, selected }) => <button className={`segment ${selected ? 'selected' : ''}`} onClick={onClickSegment.bind(this, label)}>
                     <img src="https://www.countryflags.io/cn/flat/16.png"/>
                     {label}
                   </button>)
@@ -198,23 +236,36 @@ function LineGraphView() {
             )
           }
           {
-            labelsOutsideChina.length > 0 && (
-              <div className='segments-divider'>
-                Outside China: {
-                  labelsOutsideChina.map(({ label, selected }) => <button className={`segment ${selected ? 'selected' : ''}`} onClick={onClickSegment.bind(this, label)}>
-                    {
-                      (() => {
-                        const countryCode = getCountryCodeForLabel(label)
-                        const src = countryCode ? `https://www.countryflags.io/${countryCode}/flat/16.png` :
-                                    `https://placehold.it/16/000/fff?text=${label.charAt(0)}`
-                        return <img src={src}/>
-                      })()
+            [
+              {
+                data: labelsAmerica,
+                name: 'United States'
+              },
+              {
+                data: labelsRest,
+                name: 'Rest of the world'
+              }
+            ].map(({ data, name }) => {
+              return (
+                data.length > 0 && (
+                  <div className='segments-divider'>
+                    {name}: {
+                      data.map(({ label, selected }) => <button className={`segment ${selected ? 'selected' : ''}`} onClick={onClickSegment.bind(this, label)}>
+                        {
+                          (() => {
+                            const countryCode = getCountryCodeForLabel(label)
+                            const src = countryCode ? `https://www.countryflags.io/${countryCode}/flat/16.png` :
+                                        `https://placehold.it/16/000/fff?text=${label.charAt(0)}`
+                            return <img src={src}/>
+                          })()
+                        }
+                        {label}
+                      </button>)
                     }
-                    {label}
-                  </button>)
-                }
-              </div>
-            )
+                  </div>
+                )
+              )
+            })
           }
         </div>
       </div>

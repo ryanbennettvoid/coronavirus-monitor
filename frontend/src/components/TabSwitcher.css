@@ -7,12 +7,23 @@
   flex-direction: column;
   display: flex;
   flex-direction: row;
-  background-color: white;
+  padding-top: 10px;
+  background-color: #ddd;
 }
 
 .label {
   padding: 15px;
   cursor: pointer;
+  text-decoration: underline;
+}
+
+.label-selected {
+  background-color: white;
+}
+
+.title {
+  padding: 15px;
+  font-weight: 800;
 }
 
 .body {

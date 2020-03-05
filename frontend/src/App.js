@@ -2,6 +2,7 @@ import React from 'react'
 import './App.css'
 import TabSwitcher from './components/TabSwitcher'
 import LineGraphView from './components/LineGraphView'
+import MapView from './components/MapView'
 
 const SOURCE_URL = 'https://github.com/CSSEGISandData/COVID-19'
 const PROJECT_URL = 'https://github.com/ryanbennettvoid/coronavirus-monitor'
@@ -13,8 +14,12 @@ function App() {
       <TabSwitcher
         tabs={[
           {
-            label: 'Coronavirus Cases Worldwide',
+            label: 'Graph',
             component: <LineGraphView/>
+          },
+          {
+            label: 'Map',
+            component: <MapView/>
           }
         ]}
       />

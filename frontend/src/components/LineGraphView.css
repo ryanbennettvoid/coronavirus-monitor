@@ -1,4 +1,21 @@
 
+.region-filter-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.region-filter-left {
+
+}
+
+.region-filter-right {
+padding-left: 10px;
+}
+
+.selected-count {
+  margin-bottom: 5px;
+}
+
 .type-filters {
   margin-bottom: 10px;
 }
