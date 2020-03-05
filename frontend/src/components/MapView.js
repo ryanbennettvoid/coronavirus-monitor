@@ -10,26 +10,28 @@ function MapView(props) {
 
   useEffect(() => {
 
-    setIsLoading(true)
-    API.getHistory()
-      .then((data) => {
-        setHistory(data)
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
+    // setIsLoading(true)
+    // API.getHistory()
+    //   .then((data) => {
+    //     setHistory(data)
+    //   })
+    //   .finally(() => {
+    //     setIsLoading(false)
+    //   })
 
   }, [])
 
-  if (isLoading) {
-    return <Loading/>
-  }
+  // if (isLoading) {
+  //   return <Loading/>
+  // }
 
-  if (!history) {
-    return null
-  }
+  // if (!history) {
+  //   return null
+  // }
 
-  return <div>map</div>
+  // return <div>map</div>
+
+  return <div>Under construction.</div>
 }
 
 export default MapView
