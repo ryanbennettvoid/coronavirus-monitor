@@ -1,0 +1,35 @@
+
+.leaflet-container {
+  width: 100%;
+  height: 600px;
+}
+
+.custom-marker-icon {
+  border-radius: 50%;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.custom-marker-label {
+  
+}
+
+.large {
+  background-color: red;
+  color: white;
+  font-size: 20px;
+}
+
+.medium {
+  background-color: orange;
+}
+
+.small {
+  background-color: yellow;
+}
+
+.xs {
+  background-color: white;
+}

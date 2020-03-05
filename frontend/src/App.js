@@ -3,9 +3,7 @@ import './App.css'
 import TabSwitcher from './components/TabSwitcher'
 import LineGraphView from './components/LineGraphView'
 import MapView from './components/MapView'
-
-const SOURCE_URL = 'https://github.com/CSSEGISandData/COVID-19'
-const PROJECT_URL = 'https://github.com/ryanbennettvoid/coronavirus-monitor'
+import AboutView from './components/AboutView'
 
 function App() {
 
@@ -20,17 +18,13 @@ function App() {
           {
             label: 'Map',
             component: <MapView/>
+          },
+          {
+            label: 'About',
+            component: <AboutView/>
           }
         ]}
       />
-      <div className='source-info'>
-        <div className='link-wrapper'>
-          Data source: <a target='_blank' href={SOURCE_URL}>{SOURCE_URL}</a>
-        </div>
-        <div className='link-wrapper'>
-          Code: <a target='_blank' href={PROJECT_URL}>{PROJECT_URL}</a>
-        </div>
-      </div>
     </div>
   )
 }
