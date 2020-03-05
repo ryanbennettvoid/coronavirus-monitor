@@ -56,23 +56,80 @@ function RegionsFilter(props) {
 
 function LineGraphView() {
 
+  // state
   const [isLoading, setIsLoading] = useState(false)
   const [history, setHistory] = useState(null)
   const [filter, setFilter] = useState({})
   const [mode, setMode] = useState(SHOW_CONFIRMED)
   const [ftux, setFtux] = useState(true)
+  const [demoPlayed, setDemoPlayed] = useState(false)
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
 
+  const allLabels = Object.keys(history || {})
+
+  // funcs
+  const filteredLabels = allLabels
+    .filter((label) => {
+      return filter[label]
+    })
+
+  const selectAll = () => {
+    setFilter(
+      allLabels.reduce((acc, label) => ({ ...acc, [label]: true }), {})
+    )
+  }
+
+  const selectNone = () => {
+    setFilter({})
+  }
+
+  const setLabelSelected = (label) => {
+    if (ftux) {
+      const newFilter = allLabels.reduce((acc, l) => {
+        return {
+          ...acc,
+          [l]: l === label
+        }
+      }, {})
+      setFilter(newFilter)
+    } else {
+      setFilter({
+        ...filter,
+        [label]: !filter[label]
+      })
+    }
+    setFtux(false)
+  }
+
+  const getCountryCodeForLabel = (label) => {
+    switch (label.toLowerCase()) {
+      case 'uk': return 'gb'
+    }
+    const labelCountry = history[label].country.toLowerCase()
+    const matchedCountry = countryKeys.find((countryCode) => {
+      return  countries[countryCode].name.toLowerCase() === labelCountry ||
+              countryCode.toLowerCase() === labelCountry.toLowerCase()
+    })
+    return matchedCountry
+  }
+
+  const getConfirmedForLabel = (label) => {
+    return history[label].latestConfirmed
+  }
+
+  // hooks
   useEffect(() => {
+
     setIsLoading(true)
     API.getHistory()
       .then((data) => {
+        if (!data) {
+          throw new Error(`no data provided`)
+        }
         setHistory(data)
-        const newFilter = Object.keys(data)
-          .reduce((acc, label) => {
-            return { ...acc, [label]: true }
-          }, {})
-        setFilter(newFilter)
+      })
+      .catch((err) => {
+        console.error(err)
       })
       .finally(() => {
         setIsLoading(false)
@@ -86,6 +143,43 @@ function LineGraphView() {
     return () => window.removeEventListener('resize', listenerHandler)
   }, [])
 
+  useEffect(() => {
+
+    if (!history || demoPlayed) {
+      return
+    }
+
+    setDemoPlayed(true)
+
+    const playIntroDemo = () => {
+      const topRegions = Object.values(history)
+        .sort((a, b) => b.latestConfirmed - a.latestConfirmed)
+        .map((r) => r.region)
+        .slice(0, 30)
+        .reverse()
+
+      selectNone()
+
+      topRegions.reduce((acc, label, idx) => {
+        const newFilter = {
+          ...acc,
+          [label]: true
+        }
+        setTimeout(() => {
+          setFilter(newFilter)
+        }, idx * 100)
+        return newFilter
+      }, filter)
+
+    }
+
+    setTimeout(() => {
+      playIntroDemo()
+    }, 100)
+
+  }, [history, demoPlayed])
+
+  // render
   if (isLoading) {
     return <Loading/>
   }
@@ -99,13 +193,6 @@ function LineGraphView() {
   //   {x: 2, y: 5},
   //   {x: 3, y: 15}
   // ]
-
-  const allLabels = Object.keys(history)
-
-  const filteredLabels = allLabels
-    .filter((label) => {
-      return filter[label]
-    })
 
   const showingCountTotal = allLabels.length
   const showingCountFiltered = filteredLabels.length
@@ -164,51 +251,7 @@ function LineGraphView() {
                       maxY <= 100 ? 100 :
                       maxY * 1.2
 
-  const selectAll = () => {
-    setFilter(
-      allLabels.reduce((acc, label) => ({ ...acc, [label]: true }), {})
-    )
-  }
-
-  const selectNone = () => {
-    setFilter({})
-  }
-
-  const onClickSegment = (label) => {
-    if (ftux) {
-      const newFilter = allLabels.reduce((acc, l) => {
-        return {
-          ...acc,
-          [l]: l === label
-        }
-      }, {})
-      setFilter(newFilter)
-    } else {
-      setFilter({
-        ...filter,
-        [label]: !filter[label]
-      })
-    }
-    setFtux(false)
-  }
-
   const countryKeys = Object.keys(countries)
-
-  const getCountryCodeForLabel = (label) => {
-    switch (label.toLowerCase()) {
-      case 'uk': return 'gb'
-    }
-    const labelCountry = history[label].country.toLowerCase()
-    const matchedCountry = countryKeys.find((countryCode) => {
-      return  countries[countryCode].name.toLowerCase() === labelCountry ||
-              countryCode.toLowerCase() === labelCountry.toLowerCase()
-    })
-    return matchedCountry
-  }
-
-  const getConfirmedForLabel = (label) => {
-    return history[label].latestConfirmed
-  }
 
   const legendItems = Object.keys(filter).filter((k) => filter[k]).slice(0, 12)
 
@@ -246,7 +289,7 @@ function LineGraphView() {
                     {name}: {
                       data
                       .sort((a, b) => getConfirmedForLabel(b.label) - getConfirmedForLabel(a.label))
-                      .map(({ label, selected }) => <button className={`segment ${selected ? 'selected' : ''}`} onClick={onClickSegment.bind(this, label)}>
+                      .map(({ label, selected }) => <button className={`segment ${selected ? 'selected' : ''}`} onClick={setLabelSelected.bind(this, label)}>
                         {
                           (() => {
                             const countryCode = name === 'China' ? 'cn' : getCountryCodeForLabel(label)
