@@ -1,0 +1,4 @@
+
+export const SHOW_CONFIRMED = 'SHOW_CONFIRMED'
+export const SHOW_DEATHS = 'SHOW_DEATHS'
+export const SHOW_RECOVERED = 'SHOW_RECOVERED'

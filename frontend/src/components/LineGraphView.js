@@ -16,11 +16,13 @@ import { countries } from 'countries-list'
 import './LineGraphView.css'
 import Loading from './Loading'
 
-const SHOW_CONFIRMED = 'SHOW_CONFIRMED'
-const SHOW_DEATHS = 'SHOW_DEATHS'
-const SHOW_RECOVERED = 'SHOW_RECOVERED'
+import {
+  SHOW_CONFIRMED,
+  SHOW_DEATHS,
+  SHOW_RECOVERED
+} from '../constants'
 
-function RegionsFilter(props) {
+export function RegionsFilter(props) {
   const { 
     showingCountFiltered, 
     showingCountTotal,
@@ -33,10 +35,14 @@ function RegionsFilter(props) {
   return (
     <div className='region-filter-container'>
       <div className='region-filter-left'>
-        <div className='selected-count'>
-          Showing Regions ({showingCountFiltered}/{showingCountTotal})
-          <button type='button' onClick={() => selectNone()}>Clear All Selections</button>
-        </div>
+        {
+          typeof showingCountFiltered !== 'undefined' && typeof showingCountTotal !== 'undefined' && (
+            <div className='selected-count'>
+              Showing Regions ({showingCountFiltered}/{showingCountTotal})
+              <button type='button' onClick={() => selectNone()}>Clear All Selections</button>
+            </div>
+          )
+        }
         <div className='type-filters'>
           <label>
             Confirmed Cases
