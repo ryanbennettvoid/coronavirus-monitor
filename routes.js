@@ -1,6 +1,6 @@
 
 const moment = require('moment')
-const { getData } = require('./data-fetcher2')
+const { getHistory, getGeo } = require('./data-fetcher2')
 
 module.exports = [
   {
@@ -9,7 +9,7 @@ module.exports = [
     handlers: [
       async (req, res) => {
         try {
-          const data = await getData()
+          const data = await getHistory()
           res.json(data)
         } catch (err) {
           console.error(err)

@@ -58,6 +58,7 @@ const normalizeCsv = async (csv, which) => {
           country,
           region,
           isChina: country.toLowerCase().includes('china'),
+          isAmerica: country.toLowerCase() === 'us',
           lat,
           lng,
           [which]: values
@@ -73,7 +74,7 @@ const normalizeCsv = async (csv, which) => {
   }
 }
 
-const getData = async () => {
+const getHistory = async () => {
   try {
     const [csvConfirmed, csvDeaths, csvRecovered] = await Promise.all([fetchConfirmed(), fetchDeaths(), fetchRecovered()])
 
@@ -100,5 +101,5 @@ const getData = async () => {
 }
 
 module.exports = {
-  getData
+  getHistory
 }
