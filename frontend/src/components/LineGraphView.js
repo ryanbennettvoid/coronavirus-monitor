@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import moment from 'moment'
-import {XYPlot, XAxis, YAxis, HorizontalGridLines, VerticalGridLines, LineMarkSeries, DiscreteColorLegend} from 'react-vis';
+import humanizeNumber from 'humanize-number'
+import {
+  XYPlot, 
+  XAxis,
+  YAxis,
+  HorizontalGridLines,
+  VerticalGridLines,
+  LineMarkSeries,
+  DiscreteColorLegend
+} from 'react-vis'
 
 import API from '../api'
 import { countries } from 'countries-list'
@@ -117,6 +126,14 @@ function LineGraphView() {
     return history[label].latestConfirmed
   }
 
+  const getDeathsForLabel = (label) => {
+    return history[label].latestDeaths
+  }
+
+  const getRecoveredForLabel = (label) => {
+    return history[label].latestRecovered
+  }
+
   // hooks
   useEffect(() => {
 
@@ -152,15 +169,31 @@ function LineGraphView() {
     setDemoPlayed(true)
 
     const playIntroDemo = () => {
-      const topRegions = Object.values(history)
+      const sortedRegions = Object.values(history)
         .sort((a, b) => b.latestConfirmed - a.latestConfirmed)
+
+      const topChina = sortedRegions
+        .filter((r) => r.isChina)
         .map((r) => r.region)
-        .slice(0, 30)
-        .reverse()
+        .slice(0, 5)
+
+      const topUs = sortedRegions
+        .filter((r) => r.isAmerica)
+        .map((r) => r.region)
+        .slice(0, 5)
+
+      const topRest = sortedRegions
+        .filter((r) => !r.isChina && !r.isAmerica)
+        .map((r) => r.region)
+        .slice(0, 5)
 
       selectNone()
 
-      topRegions.reduce((acc, label, idx) => {
+      // least to most confirmed
+      const demoLabels = [...topChina, ...topUs, ...topRest]
+        .sort((a, b) => history[a].latestConfirmed - history[b].latestConfirmed)
+
+      demoLabels.reduce((acc, label, idx) => {
         const newFilter = {
           ...acc,
           [label]: true
@@ -253,7 +286,37 @@ function LineGraphView() {
 
   const countryKeys = Object.keys(countries)
 
-  const legendItems = Object.keys(filter).filter((k) => filter[k]).slice(0, 12)
+  // most to least
+  const legendItems = Object.keys(filter)
+    .sort((a, b) => {
+      switch (mode) {
+        case SHOW_CONFIRMED:
+          return getConfirmedForLabel(b) - getConfirmedForLabel(a)
+        case SHOW_DEATHS:
+          return getDeathsForLabel(b) - getDeathsForLabel(a)
+        case SHOW_RECOVERED:
+          return getRecoveredForLabel(b) - getRecoveredForLabel(a)
+        default:
+          return 0
+      }
+    })
+    .filter((k) => filter[k])
+    .slice(0, 12)
+    .map((label) => {
+      let count = 0
+      switch (mode) {
+        case SHOW_CONFIRMED:
+          count = getConfirmedForLabel(label)
+          break
+        case SHOW_DEATHS:
+          count = getDeathsForLabel(label)
+          break
+        case SHOW_RECOVERED:
+          count = getRecoveredForLabel(label)
+          break
+      }
+      return `${label} (${humanizeNumber(count)})`
+    })
 
   return (
     <div className="linegraphview">
@@ -333,7 +396,12 @@ function LineGraphView() {
           left={15}
         />
       </XYPlot>
-      <DiscreteColorLegend className='legend' height={400} width={300} items={legendItems} />
+      <DiscreteColorLegend 
+        className='legend' 
+        height={400} 
+        width={Math.max(500, windowWidth - 30)}
+        items={legendItems}
+      />
     </div>
   )
 }

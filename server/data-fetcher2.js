@@ -29,6 +29,8 @@ const fetchRecovered = () => fetchFile(URL_RECOVERED)
 //     "isChina": true,
 //     "isAmerica": false,
 //     "latestConfirmed": 1234,
+//     "latestDeaths": 1234,
+//     "latestRecovered": 1234,
 //     "confirmed": [
 //       { "date": "xxx", "count": "yyy" },
 //       ...
@@ -55,15 +57,20 @@ const normalizeCsv = async (csv, which) => {
       .map((row) => {
         const [ province, country, lat, lng, ...values ] = row
         const region = province || country
+
         const whichValues = values
             .map((value, idx) => ({
               date: moment(dates[idx], 'M/D/YY HH:mm'),
               count: parseInt(value)
             }))
             .filter(({count}) => !isNaN(count))
-        const mergeObj = which === 'confirmed' ? {
-          latestConfirmed: whichValues.slice(-1)[0].count,
-        } : {}
+
+        const whichLatestCount = whichValues.slice(-1)[0].count
+
+        const mergeObj = which === 'confirmed' ? { latestConfirmed: whichLatestCount } :
+                         which === 'deaths' ? { latestDeaths: whichLatestCount } :
+                         which === 'recovered' ? { latestRecovered: whichLatestCount } :
+                         {}
 
         return Object.assign({}, {
           province,
