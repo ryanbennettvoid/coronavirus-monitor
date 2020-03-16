@@ -16,6 +16,10 @@ import {
   SHOW_RECOVERED
 } from '../constants'
 
+import {
+  hideUsCitiesFilter
+} from '../util.js'
+
 const customIconCache = {}
 
 function createCustomMarker(r, count) {
@@ -63,7 +67,18 @@ function MapView(props) {
     setIsLoading(true)
     API.getHistory()
       .then((data) => {
-        setHistory(data)
+        const filteredData = Object
+          .values(data)
+          .filter(hideUsCitiesFilter)
+          .reduce((acc, r) => {
+            return {
+              ...acc,
+              [r.region]: r
+            }
+          }, {})
+
+        setHistory(filteredData)
+        
         const defaultSliderValue = Object.values(data)[0].confirmed.length - 1
         setSliderValue(defaultSliderValue)
       })
@@ -81,7 +96,9 @@ function MapView(props) {
     return null
   }
 
-  const regions = Object.values(history)
+  const regions = Object
+    .values(history)
+
   const dates = regions[0].confirmed
     .map(({ date }) => moment(date))
   const dateRangeEnd = dates[sliderValue]

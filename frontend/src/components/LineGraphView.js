@@ -22,6 +22,10 @@ import {
   SHOW_RECOVERED
 } from '../constants'
 
+import {
+  hideUsCitiesFilter
+} from '../util.js'
+
 export function RegionsFilter(props) {
   const { 
     showingCountFiltered, 
@@ -149,7 +153,18 @@ function LineGraphView() {
         if (!data) {
           throw new Error(`no data provided`)
         }
-        setHistory(data)
+        
+        const filteredData = Object
+          .values(data)
+          .filter(hideUsCitiesFilter)
+          .reduce((acc, r) => {
+            return {
+              ...acc,
+              [r.region]: r
+            }
+          }, {})
+
+        setHistory(filteredData)
       })
       .catch((err) => {
         console.error(err)
@@ -175,7 +190,8 @@ function LineGraphView() {
     setDemoPlayed(true)
 
     const playIntroDemo = () => {
-      const sortedRegions = Object.values(history)
+      const sortedRegions = Object
+        .values(history)
         .sort((a, b) => b.latestConfirmed - a.latestConfirmed)
 
       const topChina = sortedRegions
@@ -214,7 +230,7 @@ function LineGraphView() {
 
     setTimeout(() => {
       playIntroDemo()
-    }, 100)
+    }, 1000)
 
   }, [history, demoPlayed])
 
@@ -240,9 +256,11 @@ function LineGraphView() {
   const plotData = filteredLabels
     .map((label) => {
 
-      const entries = mode === SHOW_CONFIRMED ? history[label].confirmed :
-                      mode === SHOW_DEATHS ?  history[label].deaths : 
-                      mode === SHOW_RECOVERED ? history[label].recovered :
+      const region = history[label]
+
+      const entries = mode === SHOW_CONFIRMED ? region.confirmed :
+                      mode === SHOW_DEATHS ?  region.deaths : 
+                      mode === SHOW_RECOVERED ? region.recovered :
                       []
 
       const data = entries
@@ -351,14 +369,14 @@ function LineGraphView() {
                 data: labelsRest,
                 name: 'Rest of the world'
               }
-            ].map(({ data, name }) => {
+            ].map(({ data, name }, idx) => {
               return (
                 data.length > 0 && (
-                  <div className='segments-divider'>
+                  <div key={`${name}-${idx}`} className='segments-divider'>
                     {name}: {
                       data
                       .sort((a, b) => getConfirmedForLabel(b.label) - getConfirmedForLabel(a.label))
-                      .map(({ label, selected }) => <button className={`segment ${selected ? 'selected' : ''}`} onClick={setLabelSelected.bind(this, label)}>
+                      .map(({ label, selected }, idx) => <button key={`${label}-${idx}`} className={`segment ${selected ? 'selected' : ''}`} onClick={setLabelSelected.bind(this, label)}>
                         {
                           (() => {
                             const countryCode = name === 'China' ? 'cn' : getCountryCodeForLabel(label)
