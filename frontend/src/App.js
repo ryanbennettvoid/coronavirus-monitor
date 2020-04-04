@@ -15,10 +15,10 @@ function App() {
             label: 'Graph',
             component: <LineGraphView/>
           },
-          {
+          /*{
             label: 'Map',
             component: <MapView/>
-          },
+          },*/
           {
             label: 'About',
             component: <AboutView/>

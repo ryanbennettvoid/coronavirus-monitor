@@ -22,9 +22,7 @@ import {
   SHOW_RECOVERED
 } from '../constants'
 
-import {
-  hideUsCitiesFilter
-} from '../util.js'
+const countryKeys = Object.keys(countries)
 
 export function RegionsFilter(props) {
   const { 
@@ -44,6 +42,7 @@ export function RegionsFilter(props) {
             <div className='selected-count'>
               Showing Regions ({showingCountFiltered}/{showingCountTotal})
               <button type='button' onClick={() => selectNone()}>Clear All Selections</button>
+              <button type='button' onClick={() => setMode(mode)}>Reset</button>
             </div>
           )
         }
@@ -73,38 +72,57 @@ export function RegionsFilter(props) {
   )
 }
 
+const getConfirmedForLabel = (label, history) => {
+  return history.regions[label].latestConfirmed
+}
+
+const getDeathsForLabel = (label, history) => {
+  return history.regions[label].latestDeaths
+}
+
+const getRecoveredForLabel = (label, history) => {
+  return history.regions[label].latestRecovered
+}
+
+const getCountryCodeForLabel = (label, history) => {
+  if (label.toLowerCase() === 'uk') {
+    return 'gb'
+  }
+  if (!history.regions[label]) {
+    return null
+  }
+  const labelCountry = history.regions[label].country.toLowerCase()
+  const matchedCountry = countryKeys.find((countryCode) => {
+    return  countries[countryCode].name.toLowerCase() === labelCountry ||
+            countryCode.toLowerCase() === labelCountry.toLowerCase()
+  })
+  return matchedCountry
+}
+
 function LineGraphView() {
 
   // state
   const [isLoading, setIsLoading] = useState(false)
-  const [history, setHistory] = useState(null)
+  const [history, setHistory] = useState({ regions: {}, sortOrder: {} })
   const [filter, setFilter] = useState({})
   const [mode, setMode] = useState(SHOW_CONFIRMED)
   const [ftux, setFtux] = useState(true)
-  const [demoPlayed, setDemoPlayed] = useState(false)
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
 
-  const allLabels = Object.keys(history || {})
-
-  // funcs
-  const filteredLabels = allLabels
-    .filter((label) => {
-      return filter[label]
-    })
+  const labels = Object.keys(history.regions)
+    .sort((a, b) => history.sortOrder[a] - history.sortOrder[b])
 
   const selectAll = () => {
     setFilter(
-      allLabels.reduce((acc, label) => ({ ...acc, [label]: true }), {})
+      labels.reduce((acc, label) => ({ ...acc, [label]: true }), {})
     )
   }
 
-  const selectNone = () => {
-    setFilter({})
-  }
+  const selectNone = () => setFilter({})
 
   const setLabelSelected = (label) => {
     if (ftux) {
-      const newFilter = allLabels.reduce((acc, l) => {
+      const newFilter = labels.reduce((acc, l) => {
         return {
           ...acc,
           [l]: l === label
@@ -120,58 +138,59 @@ function LineGraphView() {
     setFtux(false)
   }
 
-  const getCountryCodeForLabel = (label) => {
-    switch (label.toLowerCase()) {
-      case 'uk': return 'gb'
-    }
-    const labelCountry = history[label].country.toLowerCase()
-    const matchedCountry = countryKeys.find((countryCode) => {
-      return  countries[countryCode].name.toLowerCase() === labelCountry ||
-              countryCode.toLowerCase() === labelCountry.toLowerCase()
-    })
-    return matchedCountry
-  }
-
-  const getConfirmedForLabel = (label) => {
-    return history[label].latestConfirmed
-  }
-
-  const getDeathsForLabel = (label) => {
-    return history[label].latestDeaths
-  }
-
-  const getRecoveredForLabel = (label) => {
-    return history[label].latestRecovered
-  }
-
-  // hooks
-  useEffect(() => {
-
-    setIsLoading(true)
-    API.getHistory()
+  const loadData = (filter) => {
+    return API.getHistory(filter)
       .then((data) => {
         if (!data) {
           throw new Error(`no data provided`)
         }
-        
-        const filteredData = Object
-          .values(data)
-          .filter(hideUsCitiesFilter)
-          .reduce((acc, r) => {
-            return {
-              ...acc,
-              [r.region]: r
-            }
-          }, {})
-
-        setHistory(filteredData)
+        return data
       })
       .catch((err) => {
         console.error(err)
       })
-      .finally(() => {
+  }
+
+  const loadAndSetDataForMode = (newMode) => {
+    setIsLoading(true)
+    selectNone()
+    loadData(newMode)
+    .then((history) => {
+      const topChina = Object.keys(history.sortOrder)
+        .sort((a, b) => history.sortOrder[a] - history.sortOrder[b])
+        .filter((k) => history.regions[k].isChina)
+        .slice(0, 5)
+
+      const topRest = Object.keys(history.sortOrder)
+        .sort((a, b) => history.sortOrder[a] - history.sortOrder[b])
+        .filter((k) => !history.regions[k].isChina)
+        .slice(0, 5)
+
+      const newFilter = [...topChina, ...topRest]
+        .reduce((acc, region) => {
+          return {
+            ...acc,
+            [region]: true
+          }
+        }, {})
+
+      setFtux(true)
+      setMode(newMode)
+      setHistory(history)
+      setFilter(newFilter)
+    })
+    .finally(() => {
+      setTimeout(() => {
         setIsLoading(false)
-      })
+      }, 50)
+    })
+  }
+
+  // hooks
+
+  useEffect(() => {
+
+    loadAndSetDataForMode(mode)
 
     const listenerHandler = () => {
       setWindowWidth(window.innerWidth)
@@ -180,59 +199,6 @@ function LineGraphView() {
     window.addEventListener('resize', listenerHandler)
     return () => window.removeEventListener('resize', listenerHandler)
   }, [])
-
-  useEffect(() => {
-
-    if (!history || demoPlayed) {
-      return
-    }
-
-    setDemoPlayed(true)
-
-    const playIntroDemo = () => {
-      const sortedRegions = Object
-        .values(history)
-        .sort((a, b) => b.latestConfirmed - a.latestConfirmed)
-
-      const topChina = sortedRegions
-        .filter((r) => r.isChina)
-        .map((r) => r.region)
-        .slice(0, 5)
-
-      const topUs = sortedRegions
-        .filter((r) => r.isAmerica)
-        .map((r) => r.region)
-        .slice(0, 5)
-
-      const topRest = sortedRegions
-        .filter((r) => !r.isChina && !r.isAmerica)
-        .map((r) => r.region)
-        .slice(0, 5)
-
-      selectNone()
-
-      // least to most confirmed
-      const demoLabels = [...topChina, ...topUs, ...topRest]
-        .sort((a, b) => history[a].latestConfirmed - history[b].latestConfirmed)
-
-      demoLabels.reduce((acc, label, idx) => {
-        const newFilter = {
-          ...acc,
-          [label]: true
-        }
-        setTimeout(() => {
-          setFilter(newFilter)
-        }, idx * 100)
-        return newFilter
-      }, filter)
-
-    }
-
-    setTimeout(() => {
-      playIntroDemo()
-    }, 1000)
-
-  }, [history, demoPlayed])
 
   // render
   if (isLoading) {
@@ -243,20 +209,26 @@ function LineGraphView() {
     return null
   }
 
+  const filteredLabels = labels
+    .filter((label) => {
+      return filter[label]
+    })
+    .sort((a, b) => history.sortOrder[a] - history.sortOrder[b])
+
   // [
   //   {x: 1, y: 10},
   //   {x: 2, y: 5},
   //   {x: 3, y: 15}
   // ]
 
-  const showingCountTotal = allLabels.length
+  const showingCountTotal = labels.length
   const showingCountFiltered = filteredLabels.length
   let maxY = 0
 
   const plotData = filteredLabels
     .map((label) => {
 
-      const region = history[label]
+      const region = history.regions[label]
 
       const entries = mode === SHOW_CONFIRMED ? region.confirmed :
                       mode === SHOW_DEATHS ?  region.deaths : 
@@ -279,18 +251,13 @@ function LineGraphView() {
       return data
     })
 
-  const { labelsChina, labelsAmerica, labelsRest } = allLabels
+  const { labelsChina, labelsRest } = labels
     .reduce((acc, label) => {
       const selected = filteredLabels.includes(label)
-      if (history[label].isChina) {
+      if (history.regions[label].isChina) {
         return {
           ...acc,
           labelsChina: [...acc.labelsChina, { label, selected }]
-        }
-      } else if (history[label].isAmerica) {
-        return {
-          ...acc,
-          labelsAmerica: [...acc.labelsAmerica, { label, selected }]
         }
       }
       return {
@@ -299,7 +266,6 @@ function LineGraphView() {
       }
     }, {
       labelsChina: [],
-      labelsAmerica: [],
       labelsRest: []
     })
 
@@ -308,21 +274,10 @@ function LineGraphView() {
                       maxY <= 100 ? 100 :
                       maxY * 1.2
 
-  const countryKeys = Object.keys(countries)
-
   // most to least
   const legendItems = Object.keys(filter)
     .sort((a, b) => {
-      switch (mode) {
-        case SHOW_CONFIRMED:
-          return getConfirmedForLabel(b) - getConfirmedForLabel(a)
-        case SHOW_DEATHS:
-          return getDeathsForLabel(b) - getDeathsForLabel(a)
-        case SHOW_RECOVERED:
-          return getRecoveredForLabel(b) - getRecoveredForLabel(a)
-        default:
-          return 0
-      }
+      return history.sortOrder[a] - history.sortOrder[b]
     })
     .filter((k) => filter[k])
     .slice(0, 12)
@@ -330,13 +285,13 @@ function LineGraphView() {
       let count = 0
       switch (mode) {
         case SHOW_CONFIRMED:
-          count = getConfirmedForLabel(label)
+          count = getConfirmedForLabel(label, history)
           break
         case SHOW_DEATHS:
-          count = getDeathsForLabel(label)
+          count = getDeathsForLabel(label, history)
           break
         case SHOW_RECOVERED:
-          count = getRecoveredForLabel(label)
+          count = getRecoveredForLabel(label, history)
           break
       }
       return `${label} (${humanizeNumber(count)})`
@@ -349,7 +304,9 @@ function LineGraphView() {
         showingCountTotal={showingCountTotal}
         selectAll={selectAll}
         selectNone={selectNone}
-        setMode={setMode}
+        setMode={(newMode) => {
+          loadAndSetDataForMode(newMode)
+        }}
         mode={mode}
         ftux={ftux}
       />
@@ -359,27 +316,22 @@ function LineGraphView() {
             [
               {
                 data: labelsChina,
-                name: 'China'
-              },
-              {
-                data: labelsAmerica,
-                name: 'United States'
+                name: `China (${labelsChina.length})`
               },
               {
                 data: labelsRest,
-                name: 'Rest of the world'
+                name: `Rest of the world (${labelsRest.length})`
               }
             ].map(({ data, name }, idx) => {
               return (
                 data.length > 0 && (
-                  <div key={`${name}-${idx}`} className='segments-divider'>
+                  <div key={`${name}-${idx}`} className={`segments-divider segment-${idx}`}>
                     {name}: {
                       data
-                      .sort((a, b) => getConfirmedForLabel(b.label) - getConfirmedForLabel(a.label))
                       .map(({ label, selected }, idx) => <button key={`${label}-${idx}`} className={`segment ${selected ? 'selected' : ''}`} onClick={setLabelSelected.bind(this, label)}>
                         {
                           (() => {
-                            const countryCode = name === 'China' ? 'cn' : getCountryCodeForLabel(label)
+                            const countryCode = name === 'China' ? 'cn' : getCountryCodeForLabel(label, history)
                             const src = countryCode ? `https://www.countryflags.io/${countryCode}/flat/16.png` :
                                         `https://placehold.it/16/000/fff?text=${label.charAt(0)}`
                             return <img className='segment-flag' src={src}/>
@@ -416,7 +368,7 @@ function LineGraphView() {
               }
               <XAxis 
                 title='Time'
-                tickFormat={(d) => moment(d).format('MMM DD')}
+                tickFormat={(d) => moment(d).format('M/D')}
               />
               <YAxis 
                 title='Confirmed Cases'
@@ -426,7 +378,7 @@ function LineGraphView() {
             <DiscreteColorLegend 
               className='legend' 
               height={400} 
-              width={Math.max(500, windowWidth - 30)}
+              width={Math.min(500, windowWidth - 30)}
               items={legendItems}
             />
           </React.Fragment>

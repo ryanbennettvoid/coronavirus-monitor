@@ -47,7 +47,7 @@ const fetchRecovered = () => fetchFile(URL_RECOVERED)
 //   ...
 // ]
 
-const normalizeCsv = async (csv, which) => {
+const normalizeCsv = async (csv, which, includeGeo) => {
   try {
     const json = csvParse(csv)
     const [ _0, _1, _2, _3, ...dates ] = json[0]
@@ -67,10 +67,14 @@ const normalizeCsv = async (csv, which) => {
 
         const whichLatestCount = whichValues.slice(-1)[0].count
 
-        const mergeObj = which === 'confirmed' ? { latestConfirmed: whichLatestCount } :
-                         which === 'deaths' ? { latestDeaths: whichLatestCount } :
-                         which === 'recovered' ? { latestRecovered: whichLatestCount } :
-                         {}
+        const countsMergeObj = (
+          which === 'confirmed' ? { latestConfirmed: whichLatestCount } :
+          which === 'deaths' ? { latestDeaths: whichLatestCount } :
+          which === 'recovered' ? { latestRecovered: whichLatestCount } :
+          {}
+        )
+
+        const geoMergeObj = includeGeo ? { lat, lng } : {}
 
         return Object.assign({}, {
           province,
@@ -78,10 +82,8 @@ const normalizeCsv = async (csv, which) => {
           region,
           isChina: country.toLowerCase().includes('china'),
           isAmerica: country.toLowerCase() === 'us',
-          lat,
-          lng,
           [which]: whichValues
-        }, mergeObj)
+        }, countsMergeObj, geoMergeObj)
         return obj
       })
   } catch (err) {
@@ -89,27 +91,73 @@ const normalizeCsv = async (csv, which) => {
   }
 }
 
-const getHistory = async () => {
+const filterCsvFetchMap = {
+  'confirmed': fetchConfirmed,
+  'deaths': fetchDeaths,
+  'recovered': fetchRecovered
+}
+
+const combineNormalized = (acc, row) => {
+  const { region } = row
+  return {
+    ...acc,
+    [region]: {
+      ...acc[region],
+      ...row
+    }
+  }
+}
+
+const toSortOrder = (regions, filter) => {
+  return Object.values(regions)
+    .sort((a, b) => {
+      switch (filter) {
+        case 'confirmed':
+          return b.latestConfirmed - a.latestConfirmed
+        case 'deaths':
+          return b.latestDeaths - a.latestDeaths
+        case 'recovered':
+          return b.latestRecovered - a.latestRecovered
+      }
+    })
+    .reduce((acc, k, idx) => {
+      return {
+        ...acc,
+        [k.region]: idx
+      }
+    }, {})
+}
+
+const getHistory = async (filter) => {
   try {
+
+    if (filter) {
+      if (!['confirmed', 'deaths', 'recovered'].includes(filter)) {
+        throw new Error(`invalid filter: ${filter}`)
+      }
+      const csv = await filterCsvFetchMap[filter]()
+      const normalized = await normalizeCsv(csv, filter)
+      const regions = normalized
+        .reduce(combineNormalized, {})
+      const sortOrder = toSortOrder(regions, filter)
+      return { regions, sortOrder }
+    }
+
     const [csvConfirmed, csvDeaths, csvRecovered] = await Promise.all([fetchConfirmed(), fetchDeaths(), fetchRecovered()])
 
     const normalizedConfirmed = await normalizeCsv(csvConfirmed, 'confirmed')
     const normalizedDeaths = await normalizeCsv(csvDeaths, 'deaths')
     const normalizedRecovered = await normalizeCsv(csvRecovered, 'recovered')
 
-    const combined = [ ...normalizedConfirmed, ...normalizedDeaths, ...normalizedRecovered ]
-      .reduce((acc, row) => {
-        const { region } = row
-        return {
-          ...acc,
-          [region]: {
-            ...acc[region],
-            ...row
-          }
-        }
-      }, {})
+    const regions = [
+      ...normalizedConfirmed, 
+      ...normalizedDeaths, 
+      ...normalizedRecovered
+    ]
+    .reduce(combineNormalized, {})
 
-    return combined
+    const sortOrder = toSortOrder(regions)
+    return { regions, sortOrder }
   } catch (err) {
     return Promise.reject(err)
   }

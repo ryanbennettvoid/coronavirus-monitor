@@ -32,9 +32,25 @@ padding-left: 10px;
 .segments {
   display: flex;
   flex-direction: row;
+
+  -webkit-box-shadow: inset 0px -26px 7px -22px rgba(0,0,0,0.36);
+  -moz-box-shadow: inset 0px -26px 7px -22px rgba(0,0,0,0.36);
+  box-shadow: inset 0px -26px 7px -22px rgba(0,0,0,0.36);
 }
 
 .segments-divider {
+  max-height: 100px;
+  overflow: scroll;
+
+  padding-bottom: 20px;
+}
+
+.segment-0 {
+  min-width: 300px;
+}
+
+.segment-1 {
+
 }
 
 .segment {
