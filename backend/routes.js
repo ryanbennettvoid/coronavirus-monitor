@@ -8,8 +8,8 @@ module.exports = [
     handlers: [
       async (req, res) => {
         try {
-          const { filter } = req.query
-          const data = await getHistory(filter)
+          const { filter, geo } = req.query
+          const data = await getHistory(filter, geo)
           res.json(data)
         } catch (err) {
           console.error(err)

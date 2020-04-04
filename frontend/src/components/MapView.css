@@ -23,16 +23,35 @@
   font-size: 20px;
 }
 
+.large.recovered {
+  background-color: #00aa00 !important;
+}
+
 .medium {
   background-color: orange;
+}
+
+.medium.recovered {
+  background-color: #008800 !important;
+  color: white;
 }
 
 .small {
   background-color: yellow;
 }
 
+.small.recovered {
+  background-color: #005500 !important;
+  color: white;
+}
+
 .xs {
   background-color: white;
+}
+
+.xs.recovered {
+  background-color: black;
+  color: white;
 }
 
 .date-slider-container {

@@ -22,6 +22,8 @@ import {
   SHOW_RECOVERED
 } from '../constants'
 
+import { loadData } from '../util'
+
 const countryKeys = Object.keys(countries)
 
 export function RegionsFilter(props) {
@@ -138,23 +140,10 @@ function LineGraphView() {
     setFtux(false)
   }
 
-  const loadData = (filter) => {
-    return API.getHistory(filter)
-      .then((data) => {
-        if (!data) {
-          throw new Error(`no data provided`)
-        }
-        return data
-      })
-      .catch((err) => {
-        console.error(err)
-      })
-  }
-
   const loadAndSetDataForMode = (newMode) => {
     setIsLoading(true)
     selectNone()
-    loadData(newMode)
+    return loadData(newMode)
     .then((history) => {
       const topChina = Object.keys(history.sortOrder)
         .sort((a, b) => history.sortOrder[a] - history.sortOrder[b])
@@ -191,6 +180,9 @@ function LineGraphView() {
   useEffect(() => {
 
     loadAndSetDataForMode(mode)
+    .catch((err) => {
+      console.error(err)
+    })
 
     const listenerHandler = () => {
       setWindowWidth(window.innerWidth)
@@ -306,6 +298,9 @@ function LineGraphView() {
         selectNone={selectNone}
         setMode={(newMode) => {
           loadAndSetDataForMode(newMode)
+          .catch((err) => {
+            console.error(err)
+          })
         }}
         mode={mode}
         ftux={ftux}

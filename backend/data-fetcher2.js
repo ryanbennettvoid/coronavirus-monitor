@@ -136,7 +136,7 @@ const toSortOrder = (regions, filter) => {
     }, {})
 }
 
-const getHistory = async (filter) => {
+const getHistory = async (filter, includeGeo) => {
   try {
 
     if (filter) {
@@ -144,7 +144,7 @@ const getHistory = async (filter) => {
         throw new Error(`invalid filter: ${filter}`)
       }
       const csv = await filterCsvFetchMap[filter]()
-      const normalized = await normalizeCsv(csv, filter)
+      const normalized = await normalizeCsv(csv, filter, includeGeo)
       const regions = normalized
         .reduce(combineNormalized, {})
       const sortOrder = toSortOrder(regions, filter)
@@ -153,9 +153,9 @@ const getHistory = async (filter) => {
 
     const [csvConfirmed, csvDeaths, csvRecovered] = await Promise.all([fetchConfirmed(), fetchDeaths(), fetchRecovered()])
 
-    const normalizedConfirmed = await normalizeCsv(csvConfirmed, 'confirmed')
-    const normalizedDeaths = await normalizeCsv(csvDeaths, 'deaths')
-    const normalizedRecovered = await normalizeCsv(csvRecovered, 'recovered')
+    const normalizedConfirmed = await normalizeCsv(csvConfirmed, 'confirmed', includeGeo)
+    const normalizedDeaths = await normalizeCsv(csvDeaths, 'deaths', includeGeo)
+    const normalizedRecovered = await normalizeCsv(csvRecovered, 'recovered', includeGeo)
 
     const regions = [
       ...normalizedConfirmed, 

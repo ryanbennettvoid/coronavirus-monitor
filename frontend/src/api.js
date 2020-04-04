@@ -22,8 +22,8 @@ export default class API {
     }
   }
 
-  static getHistory(filter) {
-    return API.makeRequest('GET', `/history?filter=${filter}`, {}, {})
+  static getHistory(filter, geo=false) {
+    return API.makeRequest('GET', `/history?filter=${filter}&geo=${geo}`, {}, {})
   }
 
 }

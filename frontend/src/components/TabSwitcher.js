@@ -5,7 +5,7 @@ function TabSwitcher(props) {
 
   const { tabs } = props
 
-  const [currentTabIndex, setCurrentTabIndex] = useState(0)
+  const [currentTabIndex, setCurrentTabIndex] = useState(1)
 
   return (
     <div className="tabswitcher">

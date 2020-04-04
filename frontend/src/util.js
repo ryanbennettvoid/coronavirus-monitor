@@ -1,7 +1,15 @@
 
-export function hideUsCitiesFilter(r) {
-  if (r.isAmerica) {
-    return !r.region.includes(',') // 'Los Angeles, CA' vs 'California'
-  }
-  return true
+import API from './api'
+
+export const loadData = (filter) => {
+  return API.getHistory(filter)
+    .then((data) => {
+      if (!data) {
+        throw new Error(`no data provided`)
+      }
+      return data
+    })
+    .catch((err) => {
+      console.error(err)
+    })
 }
