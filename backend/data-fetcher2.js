@@ -2,6 +2,7 @@
 const fetch = require('node-fetch')
 const csvParse = require('csv-parse/lib/sync')
 const moment = require('moment')
+const Cache = require('./cache'), cache = Cache.newInstance(1000 * 60 * 60)
 
 const URL_CONFIRMED = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv'
 const URL_DEATHS = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv'
@@ -9,8 +10,15 @@ const URL_RECOVERED = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19
 
 const fetchFile = async (url) => {
   try {
+    if (!cache.isExpired()) {
+      const text = cache.get(url)
+      if (text) {
+        return text
+      }
+    }
     const res = await fetch(url)
     const text = await res.text()
+    cache.set(url, text)
     return text
   } catch (err) {
     return Promise.reject(err)

@@ -43,7 +43,6 @@ describe('routes', () => {
         expect(typeof k).toBe('string')
         expect(typeof data.sortOrder[k]).toBe('number')
       }
-      console.log(data.sortOrder)
 
       const region = Object.values(data.regions)[0]
       switch (filter) {
