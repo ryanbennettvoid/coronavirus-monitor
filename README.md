@@ -5,7 +5,6 @@ A visualization of coronavirus spread over time based on the JHU CSSE data sourc
 Check it out here: https://coronavirus-monitor777.firebaseapp.com
 
 ![graph](/screenshots/graph.png)
-![map](/screenshots/map.png)
 
 NOTE: this is only a visualization of limited data, which is subject to statistical bias and may not accurately represent the full picture. In reality, some numbers might be significantly higher (or lower) than displayed.
 
