@@ -13,7 +13,9 @@ export default function Loading() {
     }
   }, 100)
 
-  const message = count < 10 ? 'Loading' : 'This may take a few seconds'
+  const message = count < 5 ? 'Loading' : 
+                  count < 10 ? 'This may take a few seconds' :
+                  'Please wait'
   const dots = Array(count).fill('.')
   return <div className='loading-text'>{message}{dots}</div>
 }

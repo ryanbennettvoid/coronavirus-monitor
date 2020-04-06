@@ -19,7 +19,10 @@ import Loading from './Loading'
 import {
   SHOW_CONFIRMED,
   SHOW_DEATHS,
-  SHOW_RECOVERED
+  SHOW_RECOVERED,
+
+  SHOW_ACCUMULATIVE,
+  SHOW_RATEOFGROWTH
 } from '../constants'
 
 import { loadData } from '../util'
@@ -32,8 +35,11 @@ export function RegionsFilter(props) {
     showingCountTotal,
     selectNone,
     setMode,
+    numericMode,
+    setNumericMode,
     mode,
-    ftux
+    ftux,
+    isLoading
   } = props
 
   return (
@@ -51,15 +57,50 @@ export function RegionsFilter(props) {
         <div className='type-filters'>
           <label>
             Confirmed Cases
-            <input type='checkbox' checked={mode === SHOW_CONFIRMED} onChange={(e) => setMode(SHOW_CONFIRMED)}/>
+            <input 
+              type='checkbox' 
+              checked={mode === SHOW_CONFIRMED} 
+              onChange={(e) => setMode(SHOW_CONFIRMED)}
+              disabled={isLoading}
+            />
           </label>
           <label>
             Deaths
-            <input type='checkbox' checked={mode === SHOW_DEATHS} onChange={(e) => setMode(SHOW_DEATHS)}/>
+            <input 
+              type='checkbox' 
+              checked={mode === SHOW_DEATHS} 
+              onChange={(e) => setMode(SHOW_DEATHS)}
+              disabled={isLoading}
+            />
           </label>
           <label>
             Recovered
-            <input type='checkbox' checked={mode === SHOW_RECOVERED} onChange={(e) => setMode(SHOW_RECOVERED)}/>
+            <input 
+              type='checkbox' 
+              checked={mode === SHOW_RECOVERED} 
+              onChange={(e) => setMode(SHOW_RECOVERED)}
+              disabled={isLoading}
+            />
+          </label>
+        </div>
+        <div className='numeric-mode'>
+          <label>
+            Accumulative
+            <input 
+              type='checkbox' 
+              checked={numericMode === SHOW_ACCUMULATIVE} 
+              onChange={(e) => setNumericMode(SHOW_ACCUMULATIVE)}
+              disabled={isLoading}
+            />
+          </label>
+          <label>
+            Rate of Growth
+            <input 
+              type='checkbox' 
+              checked={numericMode === SHOW_RATEOFGROWTH} 
+              onChange={(e) => setNumericMode(SHOW_RATEOFGROWTH)}
+              disabled={isLoading}
+            />
           </label>
         </div>
       </div>
@@ -108,6 +149,7 @@ function LineGraphView() {
   const [history, setHistory] = useState({ regions: {}, sortOrder: {} })
   const [filter, setFilter] = useState({})
   const [mode, setMode] = useState(SHOW_CONFIRMED)
+  const [numericMode, setNumericMode] = useState(SHOW_ACCUMULATIVE)
   const [ftux, setFtux] = useState(true)
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
 
@@ -143,6 +185,7 @@ function LineGraphView() {
   const loadAndSetDataForMode = (newMode) => {
     setIsLoading(true)
     selectNone()
+
     return loadData(newMode)
     .then((history) => {
       const topChina = Object.keys(history.sortOrder)
@@ -169,9 +212,7 @@ function LineGraphView() {
       setFilter(newFilter)
     })
     .finally(() => {
-      setTimeout(() => {
-        setIsLoading(false)
-      }, 50)
+      setIsLoading(false)
     })
   }
 
@@ -191,15 +232,6 @@ function LineGraphView() {
     window.addEventListener('resize', listenerHandler)
     return () => window.removeEventListener('resize', listenerHandler)
   }, [])
-
-  // render
-  if (isLoading) {
-    return <Loading/>
-  }
-
-  if (!history) {
-    return null
-  }
 
   const filteredLabels = labels
     .filter((label) => {
@@ -228,16 +260,25 @@ function LineGraphView() {
                       []
 
       const data = entries
-        .map((entry) => {
+        .map((entry, idx) => {
           const { date, count } = entry
 
-          if (count > maxY) {
-            maxY = count
+          let y = count / 1
+          if (numericMode === SHOW_RATEOFGROWTH) {
+            if (idx > 0) {
+              const { count: prevCount } = entries[idx - 1]
+              const diff = count - prevCount
+              y = diff
+            }
+          }
+
+          if (y > maxY) {
+            maxY = y
           }
 
           return {
             x: moment(date),
-            y: count / 1
+            y
           }
         })
       return data
@@ -286,6 +327,9 @@ function LineGraphView() {
           count = getRecoveredForLabel(label, history)
           break
       }
+      if (numericMode === SHOW_RATEOFGROWTH) {
+        return label
+      }
       return `${label} (${humanizeNumber(count)})`
     })
 
@@ -303,7 +347,10 @@ function LineGraphView() {
           })
         }}
         mode={mode}
+        numericMode={numericMode}
+        setNumericMode={setNumericMode}
         ftux={ftux}
+        isLoading={isLoading}
       />
       <div>
         <div className='segments'>
@@ -323,7 +370,12 @@ function LineGraphView() {
                   <div key={`${name}-${idx}`} className={`segments-divider segment-${idx}`}>
                     {name}: {
                       data
-                      .map(({ label, selected }, idx) => <button key={`${label}-${idx}`} className={`segment ${selected ? 'selected' : ''}`} onClick={setLabelSelected.bind(this, label)}>
+                      .map(({ label, selected }, idx) => <button 
+                          key={`${label}-${idx}`} 
+                          className={`segment ${selected ? 'selected' : ''}`} 
+                          onClick={setLabelSelected.bind(this, label)}
+                          disabled={isLoading}
+                      >
                         {
                           (() => {
                             const countryCode = name === 'China' ? 'cn' : getCountryCodeForLabel(label, history)
@@ -366,8 +418,8 @@ function LineGraphView() {
                 tickFormat={(d) => moment(d).format('M/D')}
               />
               <YAxis 
-                title='Confirmed Cases'
-                left={15}
+                title={numericMode === SHOW_ACCUMULATIVE ? 'Confirmed Cases' : 'Confirmed Case / Day'}
+                left={30}
               />
             </XYPlot>
             <DiscreteColorLegend 
@@ -377,6 +429,16 @@ function LineGraphView() {
               items={legendItems}
             />
           </React.Fragment>
+        )
+      }
+      {
+        showingCountFiltered === 0 && (
+          <div 
+            style={{ width: Math.max(500, windowWidth - 30), height: 500 }} 
+            className='chart-placeholder'>
+            {isLoading && <Loading/>}
+            {!isLoading && <div>No regions selected.</div>}
+          </div>
         )
       }
     </div>

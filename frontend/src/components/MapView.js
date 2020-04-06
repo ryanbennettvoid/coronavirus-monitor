@@ -173,13 +173,13 @@ function MapView(props) {
           attribution="&copy; <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
         />
         {
-          rangedRegions.map((r) => {
+          rangedRegions.map((r, idx) => {
             const { lat, lng, region, latestConfirmed, latestDeaths, latestRecovered } = r
             const count = mode === SHOW_CONFIRMED ? latestConfirmed :
                           mode === SHOW_DEATHS ? latestDeaths :
                           latestRecovered
             return (
-              <Marker position={{ lat, lng }} icon={createCustomMarker(r, count, mode)} zIndexOffset={count}>
+              <Marker key={`${region}-${idx}`} position={{ lat, lng }} icon={createCustomMarker(r, count, mode)} zIndexOffset={count}>
                 <Popup>{ region }</Popup>
               </Marker>
             )
