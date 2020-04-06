@@ -83,26 +83,28 @@ export function RegionsFilter(props) {
             />
           </label>
         </div>
-        <div className='numeric-mode'>
-          <label>
-            Accumulative
-            <input 
-              type='checkbox' 
-              checked={numericMode === SHOW_ACCUMULATIVE} 
-              onChange={(e) => setNumericMode(SHOW_ACCUMULATIVE)}
-              disabled={isLoading}
-            />
-          </label>
-          <label>
-            Rate of Growth
-            <input 
-              type='checkbox' 
-              checked={numericMode === SHOW_RATEOFGROWTH} 
-              onChange={(e) => setNumericMode(SHOW_RATEOFGROWTH)}
-              disabled={isLoading}
-            />
-          </label>
-        </div>
+        {typeof setNumericMode !== 'undefined' && (
+          <div className='numeric-mode'>
+            <label>
+              Accumulative
+              <input 
+                type='checkbox' 
+                checked={numericMode === SHOW_ACCUMULATIVE} 
+                onChange={(e) => setNumericMode(SHOW_ACCUMULATIVE)}
+                disabled={isLoading}
+              />
+            </label>
+            <label>
+              Rate of Growth
+              <input 
+                type='checkbox' 
+                checked={numericMode === SHOW_RATEOFGROWTH} 
+                onChange={(e) => setNumericMode(SHOW_RATEOFGROWTH)}
+                disabled={isLoading}
+              />
+            </label>
+          </div>
+        )}
       </div>
       <div className='region-filter-right'>
         {
