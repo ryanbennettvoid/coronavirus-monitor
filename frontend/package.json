@@ -9,7 +9,7 @@
     "countries-list": "^2.5.1",
     "humanize-number": "^0.0.2",
     "leaflet": "^1.6.0",
-    "moment": "^2.24.0",
+    "moment": "^2.29.2",
     "rc-slider": "^9.2.2",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
